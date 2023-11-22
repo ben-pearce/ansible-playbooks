@@ -1,0 +1,12 @@
+---
+- name: Configure jessie
+  hosts: jessie
+  become: yes
+  roles:
+    - common
+    - common/docker
+    - common/borgmatic
+    - community.zabbix.zabbix_agent
+    - jessie/mounts
+    - common/borgmatic/restore
+    - jessie

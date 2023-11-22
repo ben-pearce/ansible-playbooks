@@ -1,0 +1,40 @@
+---
+- name: Include install vars
+  include_vars: ../vars/install.yml
+
+- name: Git checkout deployment repository
+  become: true
+  become_user: jessie
+  ansible.builtin.git:
+    repo: git@github.com:ben-pearce/home-server-deployment.git
+    dest: /home/jessie/home-server-deployment
+
+- name: Copy secrets
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: /home/jessie/home-server-deployment/.secrets/
+    owner: jessie
+    group: jessie
+    mode: '0600'
+  with_fileglob:
+    - secrets/*
+
+- name: Get system user info
+  ansible.builtin.getent:
+    database: passwd
+    key: jessie
+
+- name: Generate deployment env
+  ansible.builtin.template:
+    src: ../templates/install.env.j2
+    dest: /home/jessie/home-server-deployment/.env
+  vars:
+    net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+    user: "{{ ansible_facts.getent_passwd['jessie'] }}"
+
+- name: Boot services
+  ansible.builtin.command:
+    cmd: docker compose --ansi never --progress plain --file docker-compose.yml up --detach
+    chdir: /home/jessie/home-server-deployment
+  register: temp_compose_up
+  changed_when: "'Started' in temp_compose_up.stdout"

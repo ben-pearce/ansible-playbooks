@@ -1,0 +1,23 @@
+---
+- name: Cron job - update mailcow
+  ansible.builtin.cron:
+    name: 'update mailcow'
+    minute: '3'
+    hour: '3'
+    weekday: '0'
+    job: 'cd /opt/mailcow-dockerized/ && ./update.sh --force'
+
+- name: Cron job - update relay
+  ansible.builtin.cron:
+    name: 'update relay'
+    minute: '30'
+    hour: '3'
+    weekday: '0'
+    job: 'cd /opt/relay && /usr/bin/docker compose down && /usr/bin/docker compose pull && /usr/bin/docker compose up -d'
+
+- name: Cron job - backup mailcow
+  ansible.builtin.cron:
+    name: 'backup mailcow'
+    minute: '0'
+    hour: '0'
+    job: 'MAILCOW_BACKUP_LOCATION=/opt/mailcow-dockerized/backups/ /opt/mailcow-dockerized/helper-scripts/backup_and_restore.sh backup all --delete-days 1'

@@ -1,0 +1,27 @@
+---
+- name: Git checkout proxy repository
+  ansible.builtin.git:
+    repo: https://github.com/ben-pearce/ses-smtp-relay
+    dest: /opt/ses-smtp-relay
+
+- name: Generate relay env
+  ansible.builtin.template:
+    src: ../templates/.env.j2
+    dest: /opt/ses-smtp-relay/.env
+
+- name: Generate organisation env
+  ansible.builtin.template:
+    src: ../templates/.org.env.j2
+    dest: /opt/ses-smtp-relay/{{ item.name }}.org.env
+  with_items: '{{ mailcow_organisations }}'
+
+- name: Generate organisation compose
+  ansible.builtin.template:
+    src: ../templates/.org.docker-compose.yml.j2
+    dest: /opt/ses-smtp-relay/{{ item.name }}.org.docker-compose.yml
+  with_items: '{{ mailcow_organisations }}'
+
+- name: Boot ses relay
+  ansible.builtin.command:
+    cmd: ./docker-compose.sh up -d
+    chdir: /opt/ses-smtp-relay

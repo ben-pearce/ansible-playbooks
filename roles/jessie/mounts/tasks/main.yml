@@ -1,0 +1,21 @@
+---
+- name: Install NFS
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+
+- name: Mount media share
+  ansible.posix.mount:
+    src: lenny.benpearce.io:/mnt/pool/media
+    path: /mnt/media
+    fstype: nfs4
+    opts: defaults,nofail
+    state: mounted
+
+- name: Mount cloud share
+  ansible.posix.mount:
+    src: lenny.benpearce.io:/mnt/pool/cloud
+    path: /mnt/cloud
+    fstype: nfs4
+    opts: defaults,nofail
+    state: mounted

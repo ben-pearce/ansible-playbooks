@@ -1,0 +1,53 @@
+---
+- name: Include user public keys
+  include_vars: ../vars/public_keys.yml
+
+- name: Install borgbackup
+  ansible.builtin.apt:
+    name: borgbackup
+    state: present
+    
+- name: Create borg group
+  ansible.builtin.group:
+    name: borg
+    state: present
+    gid: 2000
+
+- name: Add backup remote users
+  ansible.builtin.user:
+    name: '{{ item }}'
+    uid: '{{ 2000 + ansible_loop.index}}'
+    groups: borg
+  with_items: "{{ groups['internal'] + groups['external'] }}"
+  loop_control:
+    extended: true
+
+- name: Set authorized keys for backup users
+  ansible.posix.authorized_key:
+    user: '{{ item }}'
+    state: present
+    key: "{{ lookup('file', '../../' + item + '/files/ssh/root/id_ed25519.pub') }}"
+    key_options: 'command="borg serve --restrict-to-path /mnt/repo/{{ item }}",restrict'
+    exclusive: true
+  with_items: "{{ groups['internal'] + groups['external'] }}"
+  when: item != 'barbie'
+  loop_control:
+    extended: true
+
+- name: Create backup repo directories
+  ansible.builtin.file:
+    path: '/mnt/repo/{{ item }}'
+    state: directory
+  when: item != 'barbie'
+  with_items: "{{ groups['internal'] + groups['external'] }}"
+
+- name: Initialize borg repositories
+  become: true
+  become_user: '{{ item }}'
+  shell: borg init --encryption repokey-blake2 /mnt/repo/{{ item }}
+  environment:
+    BORG_PASSPHRASE: "{{ hostvars[item].borg_encryption_passphrase }}"
+  register: init
+  failed_when: init.rc not in [0,2]
+  when: item != 'barbie'
+  with_items: "{{ groups['internal'] + groups['external'] }}"

@@ -1,0 +1,62 @@
+---
+- name: Get software for apt repository management.
+  apt: name={{ item }} state=present
+  with_items:
+    - build-essential
+    - curl
+    - libffi-dev
+    - libssl-dev
+    - python3-apt
+    - python3-dev
+    - python3-pycurl
+
+- name: check if certbot-dns-cloudflare plugin is installed
+  shell: certbot plugins | grep dns-cloudflare
+  register: cf_check
+  ignore_errors: true
+  changed_when: "cf_check is failed"
+
+- name: Install certbot-dns-cloudflare
+  shell: "cd {{certbot_dir}}/certbot-dns-cloudflare && python setup.py install"
+  when: cf_check is failed and certbot_install_method == 'source'
+
+- name: Install certbot-dns-cloudflare
+  shell: snap set certbot trust-plugin-with-root=ok; snap install certbot-dns-cloudflare
+  when: cf_check is failed and certbot_install_method == 'snap'
+
+- name: Create certbot folder - sudouser
+  file:
+    path: /etc/letsencrypt
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Check for renewal hooks
+  delegate_to: localhost
+  become: false
+  local_action:
+    module: ansible.builtin.stat
+    path: '{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/acme/hooks/'
+  register: stat_renewal_hooks
+
+- name: Copy renewal hooks
+  ansible.builtin.copy:
+    src: '{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/acme/hooks/'
+    dest: /etc/letsencrypt/renewal-hooks
+  when: stat_renewal_hooks.stat.exists
+
+- name: Certbot Template
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: root
+    group: root
+    mode: 0600
+  with_items:
+    - { src: 'templates/confcloudflare.ini.j2', dest: '/etc/letsencrypt/dnscloudflare.ini' }
+    - { src: 'templates/letsencrypt_cli.ini.j2', dest: '/etc/letsencrypt/cli.ini' }
+
+- name: Create Certs.
+  include_role:
+    name: geerlingguy.certbot

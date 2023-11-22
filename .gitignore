@@ -1,0 +1,8 @@
+roles/**/files/*/*
+!roles/**/files/*/*.example
+
+roles/**/vars/*
+!roles/**/vars/*.example
+
+host_vars
+!host_vars/*.example

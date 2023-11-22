@@ -1,0 +1,47 @@
+---
+- name: Include install vars
+  include_vars: ../vars/install.yml
+
+- name: Check mailcow directory
+  ansible.builtin.find:
+    paths: /opt/mailcow-dockerized
+    file_type: any
+  register: mailcow_install_directory
+
+- name: Move mailcow directory
+  ansible.builtin.command: mv /opt/mailcow-dockerized /opt/mailcow-dockerized.bak
+  args:
+    removes: /opt/mailcow-dockerized
+    creates: /opt/mailcow-dockerized.bak
+  when: mailcow_install_directory.matched >= 1
+
+- name: Git checkout mailcow repository
+  ansible.builtin.git:
+    repo: https://github.com/mailcow/mailcow-dockerized
+    dest: /opt/mailcow-dockerized
+
+- name: Delete fresh mailcow data
+  ansible.builtin.file:
+    path: /opt/mailcow-dockerized/data
+    state: absent
+  when: mailcow_install_directory.matched >= 1
+
+- name: Move mailcow backups and configuration
+  ansible.builtin.shell: |
+    mv /opt/mailcow-dockerized.bak/backups /opt/mailcow-dockerized;
+    mv /opt/mailcow-dockerized.bak/data /opt/mailcow-dockerized;
+    mv /opt/mailcow-dockerized.bak/mailcow.conf /opt/mailcow-dockerized
+  when: mailcow_install_directory.matched >= 1
+
+- name: Delete mailcow temp directory
+  ansible.builtin.file:
+    path: /opt/mailcow-dockerized.bak
+    state: absent
+  when: mailcow_install_directory.matched >= 1
+
+- name: Boot mailcow services
+  ansible.builtin.command:
+    cmd: docker compose --ansi never --progress plain --file docker-compose.yml up --detach
+    chdir: /opt/mailcow-dockerized
+  register: temp_compose_up
+  changed_when: "'Started' in temp_compose_up.stdout"

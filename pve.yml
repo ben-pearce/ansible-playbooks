@@ -1,0 +1,6 @@
+---
+- name: Configure pve
+  hosts: pve
+  become: yes
+  roles:
+    - pve

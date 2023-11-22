@@ -1,0 +1,48 @@
+---
+- name: Mount all rclone repositories
+  ansible.posix.mount:
+    src: '{{ item.path | basename | splitext | first }}-secret:'
+    path: /mnt/.repo/{{ item.path | basename | splitext | first }}
+    fstype: rclone
+    opts: "{{ opts | select | list | join(',') }}"
+    state: mounted
+  vars:
+    opts: 
+      - rw
+      - nofail
+      - _netdev
+      - "{% if 'previtem' in ansible_loop %}x-systemd.requires=/mnt/.repo/{{ ansible_loop.previtem.path | basename | splitext | first }}{% endif %}"
+      - x-systemd.automount
+      - args2env
+      - dir_perms=0777
+      - file_perms=0666
+      - umask=0007
+      - gid=2000
+      - allow_other
+      - config={{ ansible_env.HOME }}/.config/rclone/rclone.conf
+  with_items: "{{ repos.files | sort(attribute='path') }}"
+  loop_control:
+    extended: true
+
+- name: Install mergerfs
+  ansible.builtin.apt:
+    name: mergerfs
+    state: present
+
+- name: Mount mergerfs
+  ansible.posix.mount:
+    src: /mnt/.repo/*
+    path: /mnt/repo
+    fstype: fuse.mergerfs
+    opts: "{{ opts | join(',') }}"
+    state: mounted
+  vars:
+    opts: 
+      - allow_other
+      - nofail
+      - x-systemd.requires=/mnt/.repo/{{ (repos.files | sort(attribute='path') | last).path | basename | splitext | first }}
+      - x-systemd.automount
+      - use_ino
+      - moveonenospc=mfs
+      - category.create=lus
+      - minfreespace=1G

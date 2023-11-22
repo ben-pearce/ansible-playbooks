@@ -1,0 +1,6 @@
+{% if certbot_cloudflare_api_token %}
+dns_cloudflare_api_token = {{certbot_cloudflare_api_token}}
+{% else %}
+dns_cloudflare_email = {{certbot_cloudflare_email}}
+dns_cloudflare_api_key = {{certbot_cloudflare_api_key}}
+{% endif %}

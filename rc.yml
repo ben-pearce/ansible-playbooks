@@ -1,0 +1,12 @@
+---
+- name: Configure rc
+  hosts: rc
+  become: yes
+  roles:
+    - common
+    - common/borgmatic
+    - common/borgmatic/restore
+    - common/docker
+    - community.zabbix.zabbix_agent
+    - common/certbot
+    - rc

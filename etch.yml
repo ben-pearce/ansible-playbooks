@@ -1,0 +1,12 @@
+---
+- name: Configure etch
+  hosts: etch
+  become: yes
+  roles:
+    - common
+    - common/borgmatic
+    - common/borgmatic/restore
+    - community.zabbix.zabbix_agent
+    - etch
+    - common/certbot
+

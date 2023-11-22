@@ -1,0 +1,58 @@
+---
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Check AdGuard directory
+  ansible.builtin.find:
+    paths: /opt/AdGuardHome
+    file_type: any
+  register: adguard_install_directory
+
+- name: Stop and remove AdGuardHome service
+  ansible.builtin.shell: /opt/AdGuardHome/AdGuardHome -s stop; /opt/AdGuardHome/AdGuardHome -s uninstall;
+  when: adguard_install_directory.matched >= 1 and 'AdGuardHome.service' in ansible_facts.services
+
+- name: Move AdGuard directory
+  ansible.builtin.command: mv /opt/AdGuardHome /opt/AdGuardHome.bak
+  args:
+    removes: /opt/AdGuardHome
+    creates: /opt/AdGuardHome.bak
+  when: adguard_install_directory.matched >= 1
+
+- name: Download AdGuard installer
+  ansible.builtin.get_url: 
+    url: https://raw.githubusercontent.com/AdguardTeam/AdGuardHome/master/scripts/install.sh
+    dest: /tmp/adguard-installer.sh
+    mode: 0700
+    
+- name: Execute the AdGuard installer
+  ansible.builtin.shell: /tmp/adguard-installer.sh
+  when: adguard_install_directory.matched == 0
+
+- name: Reinstall AdGuard
+  ansible.builtin.shell: /tmp/adguard-installer.sh -r
+  when: adguard_install_directory.matched >= 1
+
+- name: Remove the AdGuard installer
+  ansible.builtin.file: 
+    path: /tmp/adguard-installer.sh
+    state: absent
+
+- name: Stop AdGuard service
+  ansible.builtin.shell: /opt/AdGuardHome/AdGuardHome -s stop
+
+- name: Remove fresh AdGuard settings
+  ansible.builtin.file: 
+    path: /opt/AdGuardHome
+    state: absent
+  when: adguard_install_directory.matched >= 1
+
+- name: Restore AdGuard settings
+  ansible.builtin.command: mv /opt/AdGuardHome.bak /opt/AdGuardHome
+  args:
+    removes: /opt/AdGuardHome.bak
+    creates: /opt/AdGuardHome
+  when: adguard_install_directory.matched >= 1
+
+- name: Start AdGuard service
+  ansible.builtin.shell: /opt/AdGuardHome/AdGuardHome -s start

@@ -1,0 +1,8 @@
+---
+- name: Configure barbie
+  hosts: barbie
+  become: yes
+  roles:
+    - common
+    - community.zabbix.zabbix_agent
+    - barbie

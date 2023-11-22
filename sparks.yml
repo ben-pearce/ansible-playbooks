@@ -1,0 +1,12 @@
+---
+- name: Configure sparks
+  hosts: sparks
+  become: yes
+  roles:
+    - common
+    - common/docker
+    - common/borgmatic
+    - community.zabbix.zabbix_agent
+    - sparks/mounts
+    - common/borgmatic/restore
+    - sparks

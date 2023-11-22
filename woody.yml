@@ -1,0 +1,11 @@
+---
+- name: Configure woody
+  hosts: woody
+  become: yes
+  roles:
+    - common
+    - common/docker
+    - common/borgmatic
+    - common/borgmatic/restore
+    - community.zabbix.zabbix_agent
+    - woody

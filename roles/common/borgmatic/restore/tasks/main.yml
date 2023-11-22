@@ -1,0 +1,23 @@
+---
+- name: Ensure restore points exist
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: directory
+    mode: '0700'
+  loop: "{{ borg_source_directories }}"
+
+- name: Check restore points
+  ansible.builtin.find:
+    paths: '{{ item }}'
+    file_type: any
+  register: borg_restore_point_search
+  with_items: '{{ borg_source_directories }}'
+
+- name: Restore borgmatic backups
+  ansible.builtin.shell: |
+    borgmatic extract \
+      --path {{ item.item }} \
+      --destination / \
+      --archive latest
+  when: item.matched == 0
+  with_items: '{{ borg_restore_point_search.results }}'

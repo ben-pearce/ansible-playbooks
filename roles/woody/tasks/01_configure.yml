@@ -1,0 +1,20 @@
+---
+- name: Cron job - update services
+  ansible.builtin.cron:
+    name: 'update services'
+    minute: '0'
+    hour: '0'
+    day: '1'
+    job: 'cd /home/woody/solero-server-deployment && /usr/bin/docker compose down && /usr/bin/docker compose pull && /usr/bin/docker compose up -d'
+
+- name: Cron job - update discourse
+  ansible.builtin.cron:
+    name: 'update discourse'
+    minute: '30'
+    hour: '0'
+    day: '1'
+    job: 'cd /var/discourse && ./launcher rebuild app'
+
+- name: Create docker network
+  community.docker.docker_network:
+    name: solero

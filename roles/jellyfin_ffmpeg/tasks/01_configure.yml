@@ -1,0 +1,45 @@
+---
+- name: Install NFS and SSHFS
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - nfs-common
+    - sshfs
+
+- name: Mount media share
+  ansible.posix.mount:
+    src: lenny.benpearce.io:/mnt/pool/media
+    path: /mnt/media
+    fstype: nfs
+    opts: defaults,nofail,_netdev
+    state: mounted
+
+- name: Mount media paths
+  ansible.posix.mount:
+    src: '{{ item.src }}'
+    path: '{{ item.path }}'
+    fstype: none
+    opts: x-systemd.requires={{ item.requires }},bind,nofail
+    state: mounted
+  with_items:
+    - src: /mnt/media/movies
+      path: /movies
+      requires: /mnt/media
+    - src: /mnt/media/shows
+      path: /tv
+      requires: /mnt/media
+
+- name: Mount transcode share
+  ansible.posix.mount:
+    src: transcode@jessie.benpearce.io:/transcodes
+    path: /mnt/transcodes
+    fstype: fuse.sshfs
+    opts: defaults,reconnect,ServerAliveInterval=15,allow_other,port=2222,IdentityFile=/root/.ssh/id_ed25519,_netdev
+    state: mounted
+
+- name: Add jessie 'tunnel' alias 
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    line: "{{ hostvars['jessie'].ansible_host }} tunnel"
+    state: present

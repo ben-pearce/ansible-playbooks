@@ -1,0 +1,37 @@
+---
+- name: Copy docker daemon configuration
+  ansible.builtin.copy:
+    src: files/docker/daemon.json
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Restart docker service
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: Add 'jellyfin-ffmpeg' alias 
+  ansible.builtin.lineinfile:
+    dest: /etc/hosts
+    line: "{{ hostvars['jellyfin_ffmpeg'].ansible_host }} jellyfin-ffmpeg"
+    state: present
+
+- name: Mount hardlinks
+  ansible.posix.mount:
+    src: '{{ item.src }}'
+    path: '{{ item.path }}'
+    fstype: none
+    opts: x-systemd.requires={{ item.requires }},x-systemd.automount,bind
+    state: mounted
+  with_items:
+    - src: /mnt/cloud
+      path: /opt/home-server-deployment/data/nextcloud/data/ben/files
+      requires: /mnt/cloud
+    - src: /mnt/cloud/Photos
+      path: /opt/home-server-deployment/data/immich/upload
+      requires: /mnt/cloud
+    - src: /mnt/cloud/Paperless
+      path: /opt/home-server-deployment/data/paperless/media/documents/originals
+      requires: /mnt/cloud

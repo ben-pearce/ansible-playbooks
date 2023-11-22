@@ -1,0 +1,13 @@
+---
+- name: Install NFS
+  ansible.builtin.apt:
+    name: nfs-common
+    state: present
+
+- name: Mount workspaces share
+  ansible.posix.mount:
+    src: lenny.benpearce.io:/mnt/pool/workspaces
+    path: /mnt/workspaces
+    fstype: nfs4
+    opts: defaults,nofail
+    state: mounted
