@@ -29,5 +29,4 @@
     src: ../templates/install.env.j2
     dest: /home/sparks/dev-server-deployment/.env
   vars:
-    net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
-    user: "{{ ansible_facts.getent_passwd['sparks'] }}"
+    user: "{{ ansible_facts.getent_passwd['ben'] }}"
