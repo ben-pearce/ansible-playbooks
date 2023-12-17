@@ -1,7 +1,4 @@
 ---
-- name: Include user public keys
-  include_vars: ../vars/public_keys.yml
-
 - name: Install borgbackup
   ansible.builtin.apt:
     name: borgbackup
@@ -49,5 +46,5 @@
     BORG_PASSPHRASE: "{{ hostvars[item].borg_encryption_passphrase }}"
   register: init
   failed_when: init.rc not in [0,2]
-  when: item != 'barbie'
+  when: "'borg_encryption_passphrase' in hostvars[item]"
   with_items: "{{ groups['internal'] + groups['external'] }}"

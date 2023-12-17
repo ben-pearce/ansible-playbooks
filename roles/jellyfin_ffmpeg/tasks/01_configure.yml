@@ -29,6 +29,9 @@
     - src: /mnt/media/shows
       path: /tv
       requires: /mnt/media
+    - src: /mnt/media/music-videos
+      path: /music-videos
+      requires: /mnt/media
 
 - name: Mount transcode share
   ansible.posix.mount:

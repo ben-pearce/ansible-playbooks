@@ -7,6 +7,14 @@
     group: root
     mode: '0600'
 
+- name: Copy docker daemon systemd overrides
+  ansible.builtin.copy:
+    src: files/systemd/docker.service.d/override.conf
+    dest: /etc/systemd/system/docker.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+
 - name: Restart docker service
   ansible.builtin.service:
     name: docker
@@ -23,7 +31,7 @@
     src: '{{ item.src }}'
     path: '{{ item.path }}'
     fstype: none
-    opts: x-systemd.requires={{ item.requires }},x-systemd.automount,bind
+    opts: x-systemd.requires={{ item.requires }},x-systemd.after={{ item.requires }},bind
     state: mounted
   with_items:
     - src: /mnt/cloud

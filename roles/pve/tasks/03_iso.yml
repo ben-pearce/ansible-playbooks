@@ -1,9 +1,0 @@
----
-- name: Download ISO images
-  register: image
-  ansible.builtin.get_url:
-    url: '{{ item.url }}'
-    dest: '{{ item.image }}'
-    mode: '0644'
-    force: true
-  with_items: '{{ iso_images }}'

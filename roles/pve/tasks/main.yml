@@ -1,4 +1,0 @@
----
-- include_tasks: 01_cloud_init.yml
-- include_tasks: 02_lxc.yml
-- include_tasks: 03_iso.yml
