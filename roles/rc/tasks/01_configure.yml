@@ -21,3 +21,9 @@
     minute: '0'
     hour: '0'
     job: 'MAILCOW_BACKUP_LOCATION=/opt/mailcow-dockerized/backups/ /opt/mailcow-dockerized/helper-scripts/backup_and_restore.sh backup all --delete-days 1'
+
+- name: Add 'jessie' alias 
+  ansible.builtin.lineinfile:
+    dest: /etc/cloud/templates/hosts.debian.tmpl
+    line: "{{ hostvars['jessie'].ansible_host }} jessie"
+    state: present

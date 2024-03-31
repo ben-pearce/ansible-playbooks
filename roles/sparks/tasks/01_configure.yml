@@ -1,4 +1,3 @@
----
 - name: Copy docker daemon configuration
   ansible.builtin.copy:
     src: files/docker/daemon.json
@@ -25,36 +24,6 @@
   ansible.builtin.service:
     name: docker
     state: restarted
-
-- name: Add 'jellyfin-ffmpeg' alias 
-  ansible.builtin.lineinfile:
-    dest: /etc/cloud/templates/hosts.debian.tmpl
-    line: "{{ hostvars['jellyfin_ffmpeg'].ansible_host }} jellyfin-ffmpeg"
-    state: present
-
-- name: Add 'paperless-scan' alias 
-  ansible.builtin.lineinfile:
-    dest: /etc/cloud/templates/hosts.debian.tmpl
-    line: "{{ printer_addr }} paperless-scan"
-    state: present
-
-- name: Mount hardlinks
-  ansible.posix.mount:
-    src: '{{ item.src }}'
-    path: '{{ item.path }}'
-    fstype: none
-    opts: x-systemd.requires={{ item.requires }},x-systemd.after={{ item.requires }},bind
-    state: mounted
-  with_items:
-    - src: /mnt/cloud
-      path: /opt/home-server-deployment/data/nextcloud/data/ben/files
-      requires: /mnt/cloud
-    - src: /mnt/cloud/Photos
-      path: /opt/home-server-deployment/data/immich/upload
-      requires: /mnt/cloud
-    - src: /mnt/cloud/Paperless
-      path: /opt/home-server-deployment/data/paperless/media/documents/originals
-      requires: /mnt/cloud
 
 - name: Configure journald
   community.general.ini_file:

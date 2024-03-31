@@ -5,8 +5,7 @@
   roles:
     - common
     - common/docker
-    - common/borgmatic
     - community.zabbix.zabbix_agent
     - jessie/mounts
-    - common/borgmatic/restore
+    - barbie/restore
     - jessie

@@ -1,3 +1,0 @@
----
-dependencies:
-  - role: borgbase.ansible_role_borgbackup

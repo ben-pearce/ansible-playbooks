@@ -1,23 +1,28 @@
 ---
+- name: Include borg configs
+  include_vars: ../vars/borg.yml
+
 - name: Ensure restore points exist
   ansible.builtin.file:
     path: '{{ item }}'
     state: directory
-    mode: '0700'
-  loop: "{{ borg_source_directories }}"
+    mode: '0777'
+  loop: '{{ borg_configs[inventory_hostname].source_directories }}'
 
 - name: Check restore points
   ansible.builtin.find:
     paths: '{{ item }}'
     file_type: any
   register: borg_restore_point_search
-  with_items: '{{ borg_source_directories }}'
+  with_items: '{{ borg_configs[inventory_hostname].source_directories }}'
 
 - name: Restore borgmatic backups
   ansible.builtin.shell: |
-    borgmatic extract \
+    /root/.local/bin/borgmatic --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml \
+      extract \
       --path {{ item.item }} \
-      --destination / \
+      --destination /tmp/borg \
       --archive latest
   when: item.matched == 0
+  delegate_to: barbie
   with_items: '{{ borg_restore_point_search.results }}'

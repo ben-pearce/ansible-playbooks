@@ -4,8 +4,7 @@
   become: yes
   roles:
     - common
-    - common/borgmatic
-    - common/borgmatic/restore
+    - barbie/restore
     - common/docker
     - community.zabbix.zabbix_agent
     - common/certbot

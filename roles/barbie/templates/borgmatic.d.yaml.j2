@@ -1,0 +1,35 @@
+source_directories:
+  {{ item.value.source_directories | to_nice_yaml | trim | indent(2) }}
+
+repositories:
+  - path: /mnt/repo/{{ item.key }}
+    label: local
+
+working_directory: /tmp/borg
+numeric_ids: true
+atime: true
+ctime: true
+files_cache: ctime,size
+exclude_caches: true
+exclude_if_present:
+  - .nobackup
+
+{% if 'exclude_patterns' in item %}
+exclude_patterns:
+  {{ item.value.exclude_patterns | to_nice_yaml | trim | indent(2) }}
+{% endif %}
+
+encryption_passphrase: {{ item.value.encryption_passphrase }}
+compression: auto,zstd
+archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
+
+{{ item.value.retention_policy | to_nice_yaml }}
+
+before_actions:
+  - mkdir -p /tmp/borg
+  - umount /tmp/borg || /bin/true
+  - sshfs borg@{{ item.key }}:/ /tmp/borg -o sftp_server="/usr/bin/sudo /usr/lib/sftp-server"
+
+after_actions:
+  - umount /tmp/borg
+  - rm -d /tmp/borg

@@ -103,5 +103,16 @@
     hostname: '{{ item.hostname }}'
     host: '{{ item.host }}'
     identity_file: '{{ item.identity_file }}'
+    strict_host_key_checking: "{{ item.strict_host_key_checking | default('yes') }}"
     state: present
   with_items: '{{ common_ssh_config | default([]) }}'
+
+- name: Configure sudoers
+  community.general.sudoers:
+    name: '{{ item.user }}-run-{{ item.commands | basename }}-as-{{ item.runas }}'
+    user: '{{ item.user }}'
+    runas: '{{ item.runas }}'
+    commands: '{{ item.commands }}'
+    nopassword: '{{ item.nopassword | default(false) }}'
+    state: present
+  with_items: '{{ common_sudoers | default([]) }}'

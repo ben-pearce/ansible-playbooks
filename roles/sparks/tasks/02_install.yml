@@ -22,11 +22,18 @@
 - name: Get system user info
   ansible.builtin.getent:
     database: passwd
-    key: sparks
+    key: "{{ ansible_user }}"
 
 - name: Generate deployment env
   ansible.builtin.template:
     src: ../templates/install.env.j2
     dest: /home/sparks/dev-server-deployment/.env
   vars:
-    user: "{{ ansible_facts.getent_passwd['ben'] }}"
+    user: "{{ ansible_facts.getent_passwd[ansible_user] }}"
+
+- name: Boot services
+  ansible.builtin.command:
+    cmd: docker compose --ansi never --progress plain --file docker-compose.yml up --detach
+    chdir: /home/sparks/dev-server-deployment
+  register: temp_compose_up
+  changed_when: "'Started' in temp_compose_up.stdout"
