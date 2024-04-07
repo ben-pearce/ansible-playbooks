@@ -9,3 +9,4 @@
     - community.zabbix.zabbix_agent
     - common/certbot
     - rc
+    - common/docker/compose

@@ -52,7 +52,7 @@
     value: '{{ item.value }}'
   with_items:
     - option: Storage
-      value: persistent
+      value: volatile
     - option: Compress
       value: 'yes'
     - option: SystemMaxUse

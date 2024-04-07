@@ -27,3 +27,39 @@
     dest: /etc/cloud/templates/hosts.debian.tmpl
     line: "{{ hostvars['jessie'].ansible_host }} jessie"
     state: present
+
+- name: Copy docker daemon configuration
+  ansible.builtin.copy:
+    src: files/docker/daemon.json
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Restart docker service
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+
+- name: Configure journald
+  community.general.ini_file:
+    path: /etc/systemd/journald.conf
+    section: Journal
+    option: '{{ item.option }}'
+    value: '{{ item.value }}'
+  with_items:
+    - option: Storage
+      value: volatile
+    - option: Compress
+      value: 'yes'
+    - option: SystemMaxUse
+      value: 50M
+    - option: SystemMaxFileSize
+      value: 5M
+    - option: ForwardToSyslog
+      value: 'no'
+
+- name: Restart systemd-journald service
+  ansible.builtin.service:
+    name: systemd-journald
+    state: restarted

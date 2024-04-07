@@ -40,8 +40,6 @@
   when: mailcow_install_directory.matched >= 1
 
 - name: Boot mailcow services
-  ansible.builtin.command:
-    cmd: docker compose --ansi never --progress plain --file docker-compose.yml up --detach
-    chdir: /opt/mailcow-dockerized
-  register: temp_compose_up
-  changed_when: "'Started' in temp_compose_up.stdout"
+  community.docker.docker_compose_v2:
+    project_src: /opt/mailcow-dockerized
+  with_items: '{{ common_docker_compose }}'

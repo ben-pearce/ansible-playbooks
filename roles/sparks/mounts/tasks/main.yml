@@ -9,5 +9,5 @@
     src: lenny.benpearce.io:/mnt/pool/workspaces
     path: /mnt/workspaces
     fstype: nfs4
-    opts: defaults,nofail
+    opts: defaults,nofail,x-systemd.after=network-online.target,_netdev
     state: mounted

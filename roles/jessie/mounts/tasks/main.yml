@@ -9,7 +9,7 @@
     src: lenny.benpearce.io:/mnt/pool/media
     path: /mnt/media
     fstype: nfs4
-    opts: defaults,nofail
+    opts: defaults,nofail,x-systemd.after=network-online.target,_netdev
     state: mounted
 
 - name: Mount cloud share
@@ -17,5 +17,5 @@
     src: lenny.benpearce.io:/mnt/pool/cloud
     path: /mnt/cloud
     fstype: nfs4
-    opts: defaults,nofail
+    opts: defaults,nofail,x-systemd.after=network-online.target,_netdev
     state: mounted
