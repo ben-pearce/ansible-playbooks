@@ -9,3 +9,4 @@
     - jessie/mounts
     - barbie/restore
     - jessie
+    - common/docker/compose

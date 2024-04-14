@@ -14,7 +14,7 @@ exclude_caches: true
 exclude_if_present:
   - .nobackup
 
-{% if 'exclude_patterns' in item %}
+{% if 'exclude_patterns' in item.value %}
 exclude_patterns:
   {{ item.value.exclude_patterns | to_nice_yaml | trim | indent(2) }}
 {% endif %}

@@ -8,7 +8,7 @@
   retries: 10
 
 - name: Install required system packages
-  apt:
+  ansible.builtin.apt:
     pkg:
       - curl
       - python3-pip
@@ -50,7 +50,7 @@
     - ../../{{ inventory_hostname }}/files/ssh/host_keys/*
 
 - name: Find user SSH keys
-  set_fact:
+  ansible.builtin.set_fact:
     user_keys: "{{ user_keys | default([]) + [{ 'user': item.path, 'files': lookup('fileglob', item.root + item.path + '/*').split(',') }] }}"
   with_items:
     - "{{ lookup('community.general.filetree', '../../' + inventory_hostname + '/files/ssh/') }}"

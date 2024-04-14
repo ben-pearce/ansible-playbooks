@@ -9,3 +9,4 @@
     - sparks/mounts
     - barbie/restore
     - sparks
+    - common/docker/compose

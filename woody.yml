@@ -8,3 +8,4 @@
     - barbie/restore
     - community.zabbix.zabbix_agent
     - woody
+    - common/docker/compose
