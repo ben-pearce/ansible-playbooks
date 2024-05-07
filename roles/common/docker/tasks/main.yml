@@ -9,28 +9,31 @@
       - python3-pip
       - virtualenv
       - python3-setuptools
+      - python3-docker
     state: latest
     update_cache: true
 
-- name: Add Docker GPG apt Key
-  ansible.builtin.apt_key:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    state: present
-
 - name: Add Docker Repository
-  ansible.builtin.apt_repository:
-    repo: deb https://download.docker.com/linux/ubuntu focal stable
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: "https://download.docker.com/linux/ubuntu"
+    suites: '{{ ansible_distribution_release }}'
+    components: [stable]
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
     state: present
+    enabled: true
 
 - name: Update apt and install docker-ce
   ansible.builtin.apt:
-    name: docker-ce
+    pkg:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
     state: latest
     update_cache: true
-
-- name: Install Docker Module for Python
-  ansible.builtin.pip:
-    name: docker
 
 - name: Add the user to Docker group
   ansible.builtin.user:

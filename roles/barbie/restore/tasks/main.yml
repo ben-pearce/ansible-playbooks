@@ -4,25 +4,27 @@
 
 - name: Ensure restore points exist
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: '/{{ item }}'
     state: directory
     mode: '0777'
   loop: '{{ borg_configs[inventory_hostname].source_directories }}'
 
 - name: Check restore points
   ansible.builtin.find:
-    paths: '{{ item }}'
+    paths: '/{{ item }}'
     file_type: any
   register: borg_restore_point_search
   with_items: '{{ borg_configs[inventory_hostname].source_directories }}'
 
 - name: Restore borgmatic backups
-  ansible.builtin.shell: |
-    /root/.local/bin/borgmatic --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml \
-      extract \
-      --path {{ item.item }} \
-      --destination /tmp/borg \
-      --archive latest
+  community.docker.docker_container_exec:
+    container: borgmatic
+    command: >-
+      borgmatic 
+        --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml extract 
+        --path {{ item.item }} 
+        --destination /tmp/borg-{{ inventory_hostname }} 
+        --archive latest
   when: item.matched == 0
   delegate_to: barbie
   with_items: '{{ borg_restore_point_search.results }}'

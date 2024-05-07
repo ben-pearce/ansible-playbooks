@@ -1,4 +1,2 @@
 ---
-- include_tasks: 01_rclone.yml
-- include_tasks: 02_mounts.yml
-- include_tasks: 03_borg.yml
+- include_tasks: 01_configuration.yml

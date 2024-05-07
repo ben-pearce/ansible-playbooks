@@ -4,5 +4,6 @@
   become: yes
   roles:
     - common
-    - community.zabbix.zabbix_agent
+    - common/docker
     - barbie
+    - common/docker/compose

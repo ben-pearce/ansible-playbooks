@@ -2,10 +2,10 @@ source_directories:
   {{ item.value.source_directories | to_nice_yaml | trim | indent(2) }}
 
 repositories:
-  - path: /mnt/repo/{{ item.key }}
+  - path: /mnt/repository/{{ item.key }}
     label: local
 
-working_directory: /tmp/borg
+working_directory: /tmp/borg-{{ item.key }}
 numeric_ids: true
 atime: true
 ctime: true
@@ -26,10 +26,16 @@ archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
 {{ item.value.retention_policy | to_nice_yaml }}
 
 before_actions:
-  - mkdir -p /tmp/borg
-  - umount /tmp/borg || /bin/true
-  - sshfs borg@{{ item.key }}:/ /tmp/borg -o sftp_server="/usr/bin/sudo /usr/lib/sftp-server"
+  - mkdir -p /tmp/borg-{{ item.key }}
+  - sshfs borg@{{ item.key }}:/ /tmp/borg-{{ item.key }} -o sftp_server="/usr/bin/sudo /usr/lib/sftp-server"
 
 after_actions:
-  - umount /tmp/borg
-  - rm -d /tmp/borg
+  - umount /tmp/borg-{{ item.key }}
+
+after_backup:
+  - echo "Backup created."
+  - apprise -vv -t "✅ BORGMATIC SUCCESS" -b "$(cat /tmp/backup_run.log)" "mailtos://$(cat ${SMTP_PASSWORD})@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}"
+
+on_error:
+  - echo "Error while creating a backup."
+  - apprise -vv -t "❌ BORGMATIC FAILED" -b "$(cat /tmp/backup_run.log)" "mailtos://$(cat ${SMTP_PASSWORD})@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}"
