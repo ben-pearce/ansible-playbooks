@@ -1,0 +1,10 @@
+- name: Install required system packages
+  ansible.builtin.apt:
+    pkg:
+      - sshfs
+    state: latest
+    update_cache: true
+  register: result
+  until: result is not failed
+  delay: 6
+  retries: 10

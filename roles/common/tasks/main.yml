@@ -76,6 +76,14 @@
     - '{{ user_keys | default([]) }}'
     - files
 
+- name: Set authorized keys for root
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', item) }}"
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/files/ssh/root/*.pub
+
 - name: Set authorized keys for users
   ansible.posix.authorized_key:
     user: '{{ item.0.user }}'

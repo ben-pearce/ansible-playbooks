@@ -1,0 +1,23 @@
+- name: Find LXC config
+  ansible.builtin.find:
+    paths: /etc/pve/lxc/
+    patterns: '*.conf'
+    file_type: file
+    read_whole_file: true
+    contains: '{{ hostvars[inventory_hostname].ansible_default_ipv4.macaddress }}'
+  register: lxc_config
+  delegate_to: pve
+
+- name: Configure LXC
+  ansible.builtin.lineinfile:
+    dest: '{{ (lxc_config.files | first).path }}'
+    line: '{{ item }}'
+    state: present
+  delegate_to: pve
+  register: lxc_result
+  with_items: '{{ pve_ct_config }}'
+
+- name: Restart LXC
+  delegate_to: pve
+  ansible.builtin.shell: pct reboot {{ (lxc_config.files | first).path | basename | splitext | first }}
+  when: lxc_result.changed

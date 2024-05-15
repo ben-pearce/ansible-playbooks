@@ -1,41 +1,38 @@
 ---
-- name: Include install vars
-  include_vars: ../vars/install.yml
-
 - name: Check mailcow directory
   ansible.builtin.find:
-    paths: /opt/mailcow-dockerized
+    paths: /mnt/data/mailcow-dockerized
     file_type: any
   register: mailcow_install_directory
 
 - name: Move mailcow directory
-  ansible.builtin.command: mv /opt/mailcow-dockerized /opt/mailcow-dockerized.bak
+  ansible.builtin.command: mv /mnt/data/mailcow-dockerized /mnt/data/mailcow-dockerized.bak
   args:
-    removes: /opt/mailcow-dockerized
-    creates: /opt/mailcow-dockerized.bak
+    removes: /mnt/data/mailcow-dockerized
+    creates: /mnt/data/mailcow-dockerized.bak
   when: mailcow_install_directory.matched >= 1
 
 - name: Git checkout mailcow repository
   ansible.builtin.git:
     repo: https://github.com/mailcow/mailcow-dockerized
-    dest: /opt/mailcow-dockerized
+    dest: /mnt/data/mailcow-dockerized
 
 - name: Delete fresh mailcow data
   ansible.builtin.file:
-    path: /opt/mailcow-dockerized/data
+    path: /mnt/data/mailcow-dockerized/data
     state: absent
   when: mailcow_install_directory.matched >= 1
 
 - name: Move mailcow backups and configuration
   ansible.builtin.shell: |
-    mv /opt/mailcow-dockerized.bak/backups /opt/mailcow-dockerized;
-    mv /opt/mailcow-dockerized.bak/data /opt/mailcow-dockerized;
-    mv /opt/mailcow-dockerized.bak/mailcow.conf /opt/mailcow-dockerized
+    mv /mnt/data/mailcow-dockerized.bak/backups /mnt/data/mailcow-dockerized;
+    mv /mnt/data/mailcow-dockerized.bak/data /mnt/data/mailcow-dockerized;
+    mv /mnt/data/mailcow-dockerized.bak/mailcow.conf /mnt/data/mailcow-dockerized
   when: mailcow_install_directory.matched >= 1
 
 - name: Delete mailcow temp directory
   ansible.builtin.file:
-    path: /opt/mailcow-dockerized.bak
+    path: /mnt/data/mailcow-dockerized.bak
     state: absent
   when: mailcow_install_directory.matched >= 1
 

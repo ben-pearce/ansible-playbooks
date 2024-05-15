@@ -1,0 +1,8 @@
+---
+- name: Configure alpha
+  hosts: alpha
+  become: yes
+  roles:
+    - pve/passthrough
+    - common
+    - alpha

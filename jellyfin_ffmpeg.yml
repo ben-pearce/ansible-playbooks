@@ -1,7 +1,0 @@
----
-- name: Configure jellyfin-ffmpeg
-  hosts: jellyfin_ffmpeg
-  become: yes
-  roles:
-    - common
-    - jellyfin_ffmpeg

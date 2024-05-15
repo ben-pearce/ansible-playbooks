@@ -1,2 +1,47 @@
----
-- include_tasks: 01_configuration.yml
+- name: Include encrypted rclone passphrases
+  include_vars: ../vars/rclone_keys.yml
+
+- name: Include borg configs
+  include_vars: ../vars/borg.yml
+
+- name: Create rclone config directory
+  ansible.builtin.file:
+    path: '/opt/barbie-server-deployment/config/rclone/'
+    state: directory
+
+- name: Copy rclone remote service accounts
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '/opt/barbie-server-deployment/config/rclone/'
+  with_fileglob: '../files/rclone/*.json'
+
+- name : Find rclone repositories
+  ansible.builtin.find:
+    paths: '/opt/barbie-server-deployment/config/rclone/'
+    patterns: '*.json'
+  register: repos
+
+- name: Generate rclone config
+  ansible.builtin.template:
+    src: ../templates/rclone.conf.j2
+    dest: '/opt/barbie-server-deployment/config/rclone/rclone.conf'
+  vars:
+    drives: '{{ repos.matched }}'
+
+- name: Create borgmatic config location
+  ansible.builtin.file:
+    path: /opt/barbie-server-deployment/config/borgmatic/borgmatic.d
+    state: directory
+    mode: '0600'
+
+- name: Generate borgmatic configs
+  ansible.builtin.template:
+    src: ../templates/borgmatic.d.yaml.j2
+    dest: '/opt/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}.yaml'
+  with_items: "{{ borg_configs | dict2items }}"
+
+- name: Copy borgmatic files
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '/opt/barbie-server-deployment/config/borgmatic/borgmatic.d/'
+  with_fileglob: '../files/borgmatic.d/*'

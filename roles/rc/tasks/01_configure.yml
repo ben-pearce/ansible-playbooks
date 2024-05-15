@@ -5,7 +5,7 @@
     minute: '3'
     hour: '3'
     weekday: '0'
-    job: 'cd /opt/mailcow-dockerized/ && ./update.sh --force'
+    job: 'cd /mnt/data/mailcow-dockerized/ && ./update.sh --force'
 
 - name: Cron job - update relay
   ansible.builtin.cron:
@@ -20,7 +20,7 @@
     name: 'backup mailcow'
     minute: '0'
     hour: '0'
-    job: 'MAILCOW_BACKUP_LOCATION=/opt/mailcow-dockerized/backups/ /opt/mailcow-dockerized/helper-scripts/backup_and_restore.sh backup all --delete-days 1'
+    job: 'MAILCOW_BACKUP_LOCATION=/mnt/data/mailcow-dockerized/backups/ /mnt/data/mailcow-dockerized/helper-scripts/backup_and_restore.sh backup all --delete-days 1'
 
 - name: Add 'jessie' alias 
   ansible.builtin.lineinfile:
