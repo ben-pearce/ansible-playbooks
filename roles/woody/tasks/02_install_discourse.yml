@@ -1,21 +1,21 @@
 ---
 - name: Check discourse directory
   ansible.builtin.find:
-    paths: /var/discourse
+    paths: /mnt/data/discourse
     file_type: any
   register: discourse_install_directory
 
 - name: Move discourse directory
-  ansible.builtin.command: mv /var/discourse /var/discourse.bak
+  ansible.builtin.command: mv /mnt/data/discourse /mnt/data/discourse.bak
   args:
-    removes: /var/discourse
-    creates: /var/discourse.bak
+    removes: /mnt/data/discourse
+    creates: /mnt/data/discourse.bak
   when: discourse_install_directory.matched >= 1
 
 - name: Git checkout discourse repository
   ansible.builtin.git:
     repo: https://github.com/discourse/discourse_docker.git
-    dest: /var/discourse
+    dest: /mnt/data/discourse
 
 - name: Delete fresh discourse data
   ansible.builtin.file:
@@ -23,27 +23,27 @@
     state: absent
   when: discourse_install_directory.matched >= 1
   with_items: 
-    - /var/discourse/containers
-    - /var/discourse/shared
+    - /mnt/data/discourse/containers
+    - /mnt/data/discourse/shared
 
 - name: Move discourse backups and configuration
   ansible.builtin.shell:
     cmd: mv {{ item.src }} {{ item.dest }}
   when: discourse_install_directory.matched >= 1
   with_items:
-    - src: /var/discourse.bak/containers
-      dest: /var/discourse
-    - src: /var/discourse.bak/shared
-      dest: /var/discourse
+    - src: /mnt/data/discourse.bak/containers
+      dest: /mnt/data/discourse
+    - src: /mnt/data/discourse.bak/shared
+      dest: /mnt/data/discourse
 
 - name: Delete discourse temp directory
   ansible.builtin.file:
-    path: /var/discourse.bak
+    path: /mnt/data/discourse.bak
     state: absent
   when: discourse_install_directory.matched >= 1
 
 - name: Boot discourse
   ansible.builtin.shell:
     cmd: ./launcher rebuild app
-    chdir: /var/discourse
+    chdir: /mnt/data/discourse
 

@@ -26,7 +26,7 @@
     minute: '30'
     hour: '0'
     day: '1'
-    job: 'cd /var/discourse && ./launcher rebuild app'
+    job: 'cd /mnt/data/discourse && ./launcher rebuild app'
 
 - name: Create docker network
   community.docker.docker_network:

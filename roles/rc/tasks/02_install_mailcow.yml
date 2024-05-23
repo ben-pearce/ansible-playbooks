@@ -38,5 +38,5 @@
 
 - name: Boot mailcow services
   community.docker.docker_compose_v2:
-    project_src: /opt/mailcow-dockerized
+    project_src: /mnt/data/mailcow-dockerized
   with_items: '{{ common_docker_compose }}'
