@@ -6,7 +6,7 @@
 
 - name: Mount workspaces share
   ansible.posix.mount:
-    src: lenny.benpearce.io:/mnt/pool/workspaces
+    src: lenny.benpearce.io:/mnt/fast/workspaces
     path: /mnt/workspaces
     fstype: nfs4
     opts: defaults,nofail,x-systemd.after=network-online.target,_netdev

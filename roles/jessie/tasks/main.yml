@@ -26,12 +26,6 @@
     name: docker
     state: restarted
 
-- name: Add 'paperless-scan' alias 
-  ansible.builtin.lineinfile:
-    dest: /etc/cloud/templates/hosts.debian.tmpl
-    line: "{{ printer_addr }} paperless-scan"
-    state: present
-
 - name: Mount hardlinks
   ansible.posix.mount:
     src: '{{ item.src }}'
@@ -71,4 +65,8 @@
 - name: Restart systemd-journald service
   ansible.builtin.service:
     name: systemd-journald
+<<<<<<< HEAD
     state: restarted
+=======
+    state: restarted
+>>>>>>> master-private

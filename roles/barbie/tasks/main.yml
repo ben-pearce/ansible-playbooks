@@ -1,6 +1,3 @@
-- name: Include encrypted rclone passphrases
-  include_vars: ../vars/rclone_keys.yml
-
 - name: Include borg configs
   include_vars: ../vars/borg.yml
 

@@ -4,17 +4,9 @@ type = drive
 scope = drive
 service_account_file = /config/rclone/google-drive-{{loop.index}}.json
 
-[google-drive-{{ loop.index }}-secret]
-type = crypt
-remote = google-drive-{{loop.index}}:
-filename_encryption = standard
-directory_name_encryption = true
-password = {{ vars['google_drive_' + drive|string + '_password'] }}
-password2 = {{ vars['google_drive_' + drive|string + '_password2'] }}
-
 {% endfor %}
 
 [repository]
 type = union
 create_policy = lus
-upstreams = {% for drive in range(1,(drives|int)+1) %}google-drive-{{ drive | string }}-secret: {% endfor %}
+upstreams = {% for drive in range(1,(drives|int)+1) %}google-drive-{{ drive | string }}: {% endfor %}
