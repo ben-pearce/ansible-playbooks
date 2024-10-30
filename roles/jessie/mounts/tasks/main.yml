@@ -12,9 +12,17 @@
     opts: defaults,nofail,x-systemd.after=network-online.target,_netdev
     state: mounted
 
+- name: Mount music share
+  ansible.posix.mount:
+    src: lenny.benpearce.io:/mnt/fast/music
+    path: /mnt/music
+    fstype: nfs4
+    opts: defaults,nofail,x-systemd.after=network-online.target,_netdev
+    state: mounted
+
 - name: Mount cloud share
   ansible.posix.mount:
-    src: lenny.benpearce.io:/mnt/pool/cloud
+    src: lenny.benpearce.io:/mnt/fast/cloud
     path: /mnt/cloud
     fstype: nfs4
     opts: defaults,nofail,x-systemd.after=network-online.target,_netdev

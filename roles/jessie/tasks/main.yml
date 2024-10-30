@@ -65,8 +65,4 @@
 - name: Restart systemd-journald service
   ansible.builtin.service:
     name: systemd-journald
-<<<<<<< HEAD
     state: restarted
-=======
-    state: restarted
->>>>>>> master-private
