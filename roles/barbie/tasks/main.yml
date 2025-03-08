@@ -37,6 +37,12 @@
     dest: '/opt/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}.yaml'
   with_items: "{{ borg_configs | dict2items }}"
 
+- name: Generate borgmatic remote mountpoints
+  ansible.builtin.file:
+    path: /opt/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}
+    state: directory
+  with_items: "{{ borg_configs | dict2items }}"
+
 - name: Copy borgmatic files
   ansible.builtin.copy:
     src: '{{ item }}'

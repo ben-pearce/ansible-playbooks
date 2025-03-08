@@ -5,7 +5,7 @@ repositories:
   - path: /mnt/repository/{{ item.key }}
     label: local
 
-working_directory: /tmp/borg-{{ item.key }}
+working_directory: /etc/borgmatic.d/{{ item.key }}
 numeric_ids: true
 atime: true
 ctime: true
@@ -26,16 +26,17 @@ archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
 {{ item.value.retention_policy | to_nice_yaml }}
 
 before_actions:
-  - mkdir -p /tmp/borg-{{ item.key }}
-  - sshfs borg@{{ item.key }}:/ /tmp/borg-{{ item.key }} -o sftp_server="/usr/bin/sudo /usr/lib/sftp-server"
+  - sshfs borg@{{ item.key }}:/ /etc/borgmatic.d/{{ item.key }} -o StrictHostKeyChecking=no -o sftp_server="/usr/bin/sudo /usr/lib/sftp-server"
 
 after_actions:
-  - umount /tmp/borg-{{ item.key }}
+  - umount /etc/borgmatic.d/{{ item.key }}
 
-after_backup:
-  - echo "Backup created."
-  - apprise -vv -t "✅ BORGMATIC SUCCESS" -b "$(cat /tmp/backup_run.log)" "mailtos://$(cat ${SMTP_PASSWORD})@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}"
+apprise:
+  services:
+    - url: mailtos://${SMTP_PASSWORD}@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}
+      label: mailto
 
-on_error:
-  - echo "Error while creating a backup."
-  - apprise -vv -t "❌ BORGMATIC FAILED" -b "$(cat /tmp/backup_run.log)" "mailtos://$(cat ${SMTP_PASSWORD})@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}"
+  send_logs: true
+
+  states:
+    - fail
