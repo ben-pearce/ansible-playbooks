@@ -1,0 +1,135 @@
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+  register: result
+  until: result is not failed
+  delay: 6
+  retries: 10
+
+- name: Install required system packages
+  ansible.builtin.apt:
+    pkg:
+      - python3-paramiko
+    state: present
+    update_cache: true
+  register: result
+  until: result is not failed
+  delay: 6
+  retries: 10
+
+- name: Adding users
+  ansible.builtin.user:
+    name: '{{ item.name }}'
+    groups: '{{ item.groups | default(omit) }}'
+    uid: '{{ item.uid }}'
+    append: '{{ (item.groups is defined) | ternary(true, omit) }}'
+  with_items: '{{ common_users | default([]) }}'
+
+- name: Copy SSH root key
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: /root/.ssh/
+    owner: root
+    group: root
+    mode: '0600'
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/root/*
+
+- name: Copy host keys
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: /etc/ssh
+    owner: root
+    group: root
+    mode: '0600'
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/host_keys/*
+
+- name: Find user SSH keys
+  ansible.builtin.set_fact:
+    user_keys: >-
+      {{
+        user_keys | default([]) +
+        [{'user': item.path, 'files': ssh_files}]
+      }}
+  vars:
+    ssh_files: "{{ lookup('fileglob', item.root + item.path + '/*').split(',') }}"
+  with_items: "{{ lookup('community.general.filetree', '../../' + inventory_hostname + '/secrets/ssh/') }}"
+  when: item.state == 'directory' and item.path not in ['root', 'host_keys']
+
+- name: Create user SSH directories
+  ansible.builtin.file:
+    path: /home/{{ item }}/.ssh/
+    state: directory
+    mode: '0700'
+  loop: "{{ user_keys | default([]) | map(attribute='user') }}"
+
+- name: Copy user SSH keys
+  ansible.builtin.copy:
+    src: '{{ item.1 }}'
+    dest: /home/{{ item.0.user }}/.ssh/
+    owner: '{{ item.0.user }}'
+    group: '{{ item.0.user }}'
+    mode: '0600'
+  with_subelements:
+    - '{{ user_keys | default([]) }}'
+    - files
+
+- name: Set authorized keys for root
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', item) }}"
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/root/*.pub
+
+- name: Set authorized keys for users
+  ansible.posix.authorized_key:
+    user: '{{ item.0.user }}'
+    state: present
+    key: "{{ lookup('file', item.1) }}"
+  when: item.1 is match('.*\.pub')
+  with_subelements:
+    - '{{ user_keys | default([]) }}'
+    - files
+
+- name: Add SSH keys to known hosts
+  ansible.builtin.known_hosts:
+    name: >-
+      {%- if 'port' in item -%}
+       [{{ item.host }}]:{{ item.port | default(22) | string }}
+      {%- else -%}
+       {{ item.host }}
+      {%- endif -%}
+    state: present
+    path: >-
+      {%- if 'user' in item -%}
+       /home/{{ item.user }}/.ssh/known_hosts
+      {%- elif 'path' in item -%}
+       {{ item.path }}
+      {%- else -%}
+       ~/.ssh/known_hosts
+      {%- endif -%}
+    key: "{{ lookup('pipe', 'ssh-keyscan -p ' + item.port | default(22) | string + ' ' + item.host) }}"
+  with_items: '{{ common_known_hosts | default([]) }}'
+
+- name: Add hosts to SSH configs
+  community.general.ssh_config:
+    user: '{{ item.user }}'
+    remote_user: '{{ item.remote_user }}'
+    hostname: '{{ item.hostname }}'
+    host: '{{ item.host }}'
+    identity_file: '{{ item.identity_file }}'
+    strict_host_key_checking: "{{ item.strict_host_key_checking | default(omit) }}"
+    state: present
+  with_items: '{{ common_ssh_config | default([]) }}'
+
+- name: Configure sudoers
+  community.general.sudoers:
+    name: '{{ item.user }}-run-{{ item.commands | basename }}-as-{{ item.runas }}'
+    user: '{{ item.user }}'
+    runas: '{{ item.runas }}'
+    commands: '{{ item.commands }}'
+    nopassword: '{{ item.nopassword | default(omit) }}'
+    state: present
+  with_items: '{{ common_sudoers | default([]) }}'

@@ -1,0 +1,10 @@
+{% for drive in range(1,(drives|int)+1) %}
+[google-drive-{{ loop.index }}]
+type = drive
+scope = drive
+service_account_file = /config/rclone/google-drive-{{loop.index}}.json
+{% endfor %}
+[repository]
+type = union
+create_policy = lus
+upstreams = {% for drive in range(1,(drives|int)+1) %}google-drive-{{ drive | string }}: {% endfor %}

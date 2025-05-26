@@ -1,0 +1,10 @@
+- name: Configure rc
+  hosts: rc
+  become: true
+  roles:
+    - common
+    - common_journald
+    - barbie_restore
+    - common_docker
+    - rc
+    - common_docker_compose

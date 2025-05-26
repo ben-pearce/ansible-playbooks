@@ -1,0 +1,11 @@
+- name: Configure woody
+  hosts: woody
+  become: true
+  roles:
+    - common
+    - common_journald
+    - common_docker
+    - common_docker_config
+    - barbie_restore
+    - woody
+    - common_docker_compose

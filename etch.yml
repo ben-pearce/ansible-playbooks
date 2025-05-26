@@ -1,0 +1,8 @@
+- name: Configure etch
+  hosts: etch
+  become: true
+  roles:
+    - common
+    - common_docker
+    - barbie_restore
+    - common_docker_compose

@@ -1,0 +1,10 @@
+- name: Configure jessie
+  hosts: jessie
+  become: true
+  roles:
+    - common
+    - common_journald
+    - common_docker
+    - barbie_restore
+    - jessie
+    - common_docker_compose

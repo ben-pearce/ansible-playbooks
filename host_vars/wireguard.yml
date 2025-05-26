@@ -1,0 +1,41 @@
+common_users:
+  - uid: 2000
+    name: wireguard
+common_sudoers:
+  - user: wireguard
+    runas: root
+    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    nopassword: true
+common_known_hosts:
+  - host: github.com
+    user: wireguard
+common_ssh_config:
+  - user: wireguard
+    remote_user: git
+    hostname: github.com
+    host: github
+    identity_file: /home/wireguard/.ssh/id_ed25519
+common_docker_compose:
+  - repo: git@github.com:ben-pearce/wireguard-server-deployment.git
+    user: wireguard
+    environment:
+      - key: TZ
+        value: Europe/London
+      - key: PUID
+        value: 2000
+      - key: PGID
+        value: 2000
+      - key: CONFIG_DIR
+        value: /opt/wireguard-server-deployment/config
+      - key: DATA_DIR
+        value: /opt/wireguard-server-deployment/data
+      - key: PEERDNS
+        value: 10.0.0.2
+      - key: PEERS
+        value: Ben,ThinkPadP14s,Pixel6Pro
+      - key: SERVERURL
+        value: wireguard.benpearce.io
+      - key: SERVERPORT
+        value: 51450
+      - key: DDCLIENT_CLOUDFLARE_ZONE
+        value: benpearce.io

@@ -1,0 +1,37 @@
+repositories:
+  - path: /mnt/repository/{{ item.key }}
+    label: local
+working_directory: /etc/borgmatic.d/{{ item.key }}
+numeric_ids: true
+atime: true
+ctime: true
+files_cache: ctime,size
+exclude_caches: true
+exclude_if_present:
+  - .nobackup
+encryption_passphrase: '{credential container borg_passphrase}'
+compression: auto,zstd
+archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
+lock_wait: 30
+commands:
+  - before: everything
+    run:
+      - /etc/borgmatic.d/scripts/{{ item.key }}/before
+  - before: action
+    when: [extract]
+    run:
+      - /etc/borgmatic.d/scripts/before-extract
+  - after: everything
+    run:
+      - /etc/borgmatic.d/scripts/{{ item.key }}/after
+apprise:
+  services:
+    - url: mailtos://${SMTP_PASSWORD}@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}
+      label: mailto
+  send_logs: true
+  states:
+    - fail
+{% for key, value in item.value.items() -%}
+{{ key }}:
+  {{ value | to_nice_yaml(indent=2) | indent(2) }}
+{%- endfor %}

@@ -1,0 +1,68 @@
+common_users:
+  - uid: 2000
+    name: sparks
+  - uid: 2001
+    name: borg
+common_sudoers:
+  - user: sparks
+    runas: root
+    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    nopassword: true
+  - user: borg
+    runas: root
+    commands: /usr/lib/sftp-server
+    nopassword: true
+common_known_hosts:
+  - host: github.com
+    user: sparks
+common_ssh_config:
+  - user: sparks
+    remote_user: git
+    hostname: github.com
+    host: github
+    identity_file: /home/sparks/.ssh/id_ed25519
+common_journald_config:
+  - option: Storage
+    value: volatile
+  - option: Compress
+    value: 'yes'
+  - option: SystemMaxUse
+    value: 50M
+  - option: SystemMaxFileSize
+    value: 5M
+  - option: ForwardToSyslog
+    value: 'no'
+common_docker_compose:
+  - repo: git@github.com:ben-pearce/sparks-server-deployment.git
+    user: sparks
+    environment:
+      - key: HOST
+        value: sparks.benpearce.io
+      - key: AUTHELIA_HOST
+        value: login.jessie.benpearce.io
+      - key: ADMIN_MAIL
+        value: me@benpearce.io
+      - key: TZ
+        value: Europe/London
+      - key: PUID
+        value: 1000
+      - key: PGID
+        value: 1000
+      - key: CONFIG_DIR
+        value: /mnt/data/sparks-server-deployment/config
+      - key: DATA_DIR
+        value: /mnt/data/sparks-server-deployment/data
+      - key: HOST_IP
+        value: '10.0.0.5'
+      - key: SMTP_USER
+        value: notifications@benpearce.io
+      - key: SMTP_HOST
+        value: mail.benpearce.io
+      - key: NFS_HOST
+        value: lenny.benpearce.io
+      - key: ZBX_HOSTNAME
+        value: sparks
+      - key: ZBX_SERVER_HOST
+        value: zabbix.benpearce.io
+      - key: ZBX_REFRESHACTIVECHECKS
+        value: 60

@@ -1,0 +1,10 @@
+- name: Configure zurg
+  hosts: zurg
+  become: true
+  roles:
+    - common
+    - common_journald
+    - common_docker
+    - barbie_restore
+    - zurg
+    - common_docker_compose

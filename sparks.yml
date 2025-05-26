@@ -1,0 +1,10 @@
+- name: Configure sparks
+  hosts: sparks
+  become: true
+  roles:
+    - common
+    - common_journald
+    - common_docker
+    - barbie_restore
+    - sparks
+    - common_docker_compose

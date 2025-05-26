@@ -1,0 +1,53 @@
+- name: Create rclone config directory
+  ansible.builtin.file:
+    path: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
+    state: directory
+    mode: '0755'
+
+- name: Copy rclone remote service accounts
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
+    mode: '0644'
+  with_fileglob: '../secrets/rclone/*.json'
+
+- name: Find rclone repositories
+  ansible.builtin.find:
+    paths: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
+    patterns: '*.json'
+  register: repos
+
+- name: Generate rclone config
+  ansible.builtin.template:
+    src: rclone.conf.j2
+    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/rclone.conf'
+    mode: '0644'
+  vars:
+    drives: '{{ repos.matched }}'
+
+- name: Create borgmatic config location
+  ansible.builtin.file:
+    path: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d'
+    state: directory
+    mode: '0600'
+
+- name: Generate borgmatic configs
+  ansible.builtin.template:
+    src: borgmatic.d.yaml.j2
+    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}.yaml'
+    mode: '0644'
+  with_items: "{{ barbie_borg_configs | dict2items }}"
+
+- name: Generate borgmatic remote mountpoints
+  ansible.builtin.file:
+    path: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}'
+    state: directory
+    mode: '0755'
+  with_items: "{{ barbie_borg_configs | dict2items }}"
+
+- name: Copy borgmatic files
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/'
+    mode: '0644'
+  with_fileglob: '../secrets/borgmatic.d/*'

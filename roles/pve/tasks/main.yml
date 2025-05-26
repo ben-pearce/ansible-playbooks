@@ -1,0 +1,17 @@
+- name: Create ffmpeg user
+  ansible.builtin.user:
+    name: ffmpeg
+    shell: /bin/bash
+    groups:
+      - video
+      - render
+    uid: 2000
+    append: true
+
+- name: Set authorized keys for ffmpeg user
+  ansible.posix.authorized_key:
+    user: ffmpeg
+    state: present
+    key: "{{ lookup('file', item) }}"
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/ffmpeg/*.pub

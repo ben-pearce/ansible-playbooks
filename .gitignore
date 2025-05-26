@@ -1,0 +1,4 @@
+renovate-config.json
+renovate.json
+roles/**/secrets/*
+!roles/**/secrets/.gitkeep

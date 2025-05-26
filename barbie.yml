@@ -1,0 +1,9 @@
+- name: Configure barbie
+  hosts: barbie
+  become: true
+  roles:
+    - common
+    - common_docker
+    - barbie
+    - common_docker_compose
+    - barbie_restore

@@ -1,0 +1,9 @@
+- name: Configure sid
+  hosts: sid
+  become: true
+  roles:
+    - common
+    - common_journald
+    - common_docker
+    - sid
+    - common_docker_compose

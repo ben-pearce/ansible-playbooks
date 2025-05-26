@@ -1,0 +1,74 @@
+common_users:
+  - uid: 2000
+    name: barbie
+common_sudoers:
+  - user: barbie
+    runas: root
+    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    nopassword: true
+common_ssh_config:
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['jessie'].ansible_host }}"
+    host: jessie
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['etch'].ansible_host }}"
+    host: etch
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['rc'].ansible_host }}"
+    host: rc
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['sparks'].ansible_host }}"
+    host: sparks
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['woody'].ansible_host }}"
+    host: woody
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+  - user: root
+    remote_user: borg
+    hostname: "{{ hostvars['zurg'].ansible_host }}"
+    host: zurg
+    strict_host_key_checking: 'no'
+    identity_file: /root/.ssh/id_ed25519
+barbie_data_path: /mnt/data
+common_docker_compose:
+  - repo: https://github.com/ben-pearce/barbie-server-deployment
+    user: barbie
+    environment:
+      - key: ADMIN_EMAIL
+        value: me@benpearce.io
+      - key: TZ
+        value: Europe/London
+      - key: PUID
+        value: 2000
+      - key: PGID
+        value: 2000
+      - key: CONFIG_DIR
+        value: '{{ barbie_data_path }}/barbie-server-deployment/config'
+      - key: DATA_DIR
+        value: '{{ barbie_data_path }}/barbie-server-deployment/data'
+      - key: SMTP_HOST
+        value: mail.benpearce.io:587
+      - key: SMTP_USER
+        value: notifications@benpearce.io
+      - key: NFS_HOST
+        value: lenny.benpearce.io
+      - key: ZBX_HOSTNAME
+        value: barbie
+      - key: ZBX_SERVER_HOST
+        value: zabbix.benpearce.io
+      - key: ZBX_REFRESHACTIVECHECKS
+        value: 60

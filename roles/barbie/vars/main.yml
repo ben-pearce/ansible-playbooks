@@ -1,0 +1,91 @@
+barbie_borg_configs:
+  barbie:
+    source_directories:
+      - cloud
+      - workspaces
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    exclude_from:
+      - /tmp/barbie-excludes
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/atCsHvVap4
+      states:
+        - finish
+        - fail
+  jessie:
+    source_directories:
+      - mnt/data/jessie-server-deployment/config
+      - mnt/data/jessie-server-deployment/data
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
+      states:
+        - finish
+        - fail
+  etch:
+    source_directories:
+      - opt/etch-server-deployment/config
+      - opt/etch-server-deployment/data
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
+      states:
+        - finish
+        - fail
+  rc:
+    source_directories:
+      - mnt/data/mailcow-dockerized
+      - mnt/data/rc-server-deployment
+      - mnt/data/docker/volumes
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/VHEcxnEdnQ
+      states:
+        - finish
+        - fail
+  sparks:
+    source_directories:
+      - mnt/data/sparks-server-deployment/config
+      - mnt/data/sparks-server-deployment/data
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
+      states:
+        - finish
+        - fail
+  woody:
+    source_directories:
+      - mnt/data/woody-server-deployment/config
+      - mnt/data/woody-server-deployment/data
+      - mnt/data/discourse/containers
+      - mnt/data/discourse/shared
+    exclude_patterns:
+      - mnt/data/woody-server-deployment/data/nginx/sites/*/download.zip
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
+      states:
+        - finish
+        - fail
+  zurg:
+    source_directories:
+      - opt/zurg-server-deployment/data
+    keep_daily: 2
+    keep_weekly: 2
+    keep_monthly: 3
+    uptime_kuma:
+      push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
+      states:
+        - finish
+        - fail

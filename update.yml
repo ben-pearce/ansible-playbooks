@@ -1,0 +1,12 @@
+- name: Update servers
+  hosts:
+    - barbie
+    - etch
+    - jessie
+    - rc
+    - wireguard
+    - woody
+    - sparks
+  become: true
+  roles:
+    - common_update

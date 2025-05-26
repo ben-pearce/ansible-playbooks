@@ -1,0 +1,17 @@
+- name: Include borg configs
+  ansible.builtin.include_vars: ../../barbie/vars/main.yml
+
+- name: Restore borgmatic backups
+  community.docker.docker_container_exec:
+    container: borgmatic
+    command: |
+      /bin/sh -c "export SMTP_PASSWORD=$(cat /run/secrets/smtp_password) && \
+        export SAFE_EXTRACT_PATH={{ item }} && borgmatic \
+        --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml extract \
+        --path {{ item }} \
+        --destination /etc/borgmatic.d/{{ inventory_hostname }} \
+        --archive latest"
+  delegate_to: barbie
+  with_items: '{{ barbie_borg_configs[inventory_hostname].source_directories }}'
+  register: result
+  failed_when: result.rc != 0 and result.rc != 1

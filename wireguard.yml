@@ -1,0 +1,10 @@
+- name: Configure wireguard
+  hosts: wireguard
+  gather_facts: false
+  become: true
+  roles:
+    - common_wait
+    - common
+    - common_docker
+    - wireguard
+    - common_docker_compose

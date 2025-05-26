@@ -1,0 +1,49 @@
+- name: Get system user info
+  ansible.builtin.getent:
+    database: passwd
+    key: '{{ item.user }}'
+  with_items: '{{ common_docker_compose }}'
+
+- name: Git checkout deployment repository
+  become: true
+  become_user: '{{ item.user }}'
+  ansible.builtin.git:
+    repo: '{{ item.repo }}'
+    version: main
+    dest: '{{ ansible_facts.getent_passwd[item.user].4 }}/{{ item.repo | basename | splitext | first }}'
+  with_items: '{{ common_docker_compose }}'
+
+- name: Generate deployment env
+  ansible.builtin.lineinfile:
+    path: '{{ ansible_facts.getent_passwd[item.0.user].4 }}/{{ item.0.repo | basename | splitext | first }}/.env'
+    state: present
+    regexp: "^{{ item.1.key }}="
+    line: "{{ item.1.key }}={{ item.1.value}}"
+    create: true
+    mode: '0644'
+  loop: "{{ common_docker_compose | subelements('environment') }}"
+
+- name: Check if secrets exist
+  ansible.builtin.find:
+    paths: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker"
+    file_type: file
+  delegate_to: localhost
+  become: false
+  register: secrets_files
+
+- name: Copy secrets
+  ansible.builtin.copy:
+    src: '{{ item.1 }}'
+    dest: '{{ ansible_facts.getent_passwd[item.0.user].4 }}/{{ item.0.repo | basename | splitext | first }}/.secrets/'
+    owner: '{{ item.0.user }}'
+    group: '{{ item.0.user }}'
+    mode: '0600'
+  with_nested:
+    - "{{ common_docker_compose }}"
+    - "{{ lookup('ansible.builtin.fileglob', '{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker/*').split(',') }}"
+  when: secrets_files.matched > 0
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: '{{ ansible_facts.getent_passwd[item.user].4 }}/{{ item.repo | basename | splitext | first }}'
+  with_items: '{{ common_docker_compose }}'

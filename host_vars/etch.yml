@@ -1,0 +1,43 @@
+common_users:
+  - uid: 2000
+    name: etch
+  - uid: 2001
+    name: borg
+common_sudoers:
+  - user: borg
+    runas: root
+    commands: /usr/lib/sftp-server
+    nopassword: true
+  - user: etch
+    runas: root
+    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    nopassword: true
+common_known_hosts:
+  - host: github.com
+    user: etch
+common_ssh_config:
+  - user: etch
+    remote_user: git
+    hostname: github.com
+    host: github
+    identity_file: /home/etch/.ssh/id_ed25519
+common_docker_compose:
+  - repo: git@github.com:ben-pearce/etch-server-deployment.git
+    user: etch
+    environment:
+      - key: PUID
+        value: 2000
+      - key: PGID
+        value: 2000
+      - key: DNS_INTERFACE
+        value: 10.0.0.2
+      - key: CONFIG_DIR
+        value: /opt/etch-server-deployment/config
+      - key: DATA_DIR
+        value: /opt/etch-server-deployment/data
+      - key: ZBX_HOSTNAME
+        value: etch
+      - key: ZBX_SERVER_HOST
+        value: zabbix.benpearce.io
+      - key: ZBX_REFRESHACTIVECHECKS
+        value: 60

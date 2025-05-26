@@ -1,0 +1,31 @@
+- name: Open port 25 (SMTP) in iptables
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: 25
+    jump: ACCEPT
+    action: insert
+    rule_num: 5
+
+- name: Save iptables rules using netfilter-persistent
+  ansible.builtin.command: netfilter-persistent save
+  register: iptables_save
+  changed_when: iptables_save.rc == 0
+
+- name: Create configuration directory
+  ansible.builtin.file:
+    path: /opt/wireguard-server-deployment/config
+    state: directory
+    mode: '0755'
+
+- name: Copy ddclient configuration files
+  ansible.builtin.copy:
+    src: files/ddclient
+    dest: /opt/wireguard-server-deployment/config
+    mode: '0755'
+
+- name: Copy wireguard secrets
+  ansible.builtin.copy:
+    src: secrets/wireguard
+    dest: /opt/wireguard-server-deployment/config
+    mode: '0755'

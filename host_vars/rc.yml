@@ -1,0 +1,52 @@
+common_users:
+  - uid: 2000
+    name: rc
+  - uid: 2001
+    name: borg
+common_sudoers:
+  - user: borg
+    runas: root
+    commands: /usr/lib/sftp-server
+    nopassword: true
+  - user: rc
+    runas: root
+    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    nopassword: true
+common_known_hosts:
+  - host: github.com
+    user: rc
+common_ssh_config:
+  - user: rc
+    remote_user: git
+    hostname: github.com
+    host: github
+    identity_file: /home/rc/.ssh/id_ed25519
+common_journald_config:
+  - option: Storage
+    value: volatile
+  - option: Compress
+    value: 'yes'
+  - option: SystemMaxUse
+    value: 50M
+  - option: SystemMaxFileSize
+    value: 5M
+  - option: ForwardToSyslog
+    value: 'no'
+common_docker_compose:
+  - repo: https://github.com/ben-pearce/rc-server-deployment.git
+    user: rc
+    environment:
+      - key: PUID
+        value: 2000
+      - key: PGID
+        value: 2000
+      - key: MAILCOW_DIR
+        value: /mnt/data/mailcow-dockerized
+      - key: DATA_DIR
+        value: /mnt/data/rc-server-deployment
+      - key: ZBX_HOSTNAME
+        value: rc
+      - key: ZBX_SERVER_HOST
+        value: zabbix.benpearce.io
+      - key: ZBX_REFRESHACTIVECHECKS
+        value: 60

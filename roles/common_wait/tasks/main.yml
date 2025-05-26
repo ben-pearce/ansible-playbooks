@@ -1,0 +1,7 @@
+- name: Wait for target connection to become reachable
+  ansible.builtin.wait_for_connection:
+    sleep: 5
+    timeout: 300
+
+- name: Gathering Facts
+  ansible.builtin.setup:
