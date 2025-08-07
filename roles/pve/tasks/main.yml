@@ -1,3 +1,11 @@
+- name: Install required system packages
+  ansible.builtin.apt:
+    pkg:
+      - fuse3
+      - lm-sensors
+    state: present
+    update_cache: true
+
 - name: Create ffmpeg user
   ansible.builtin.user:
     name: ffmpeg
@@ -15,3 +23,42 @@
     key: "{{ lookup('file', item) }}"
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/ffmpeg/*.pub
+
+- name: Create zabbix user
+  ansible.builtin.user:
+    name: zabbix
+    shell: /bin/bash
+    uid: 2001
+
+- name: Set authorized keys for zabbix user
+  ansible.posix.authorized_key:
+    user: zabbix
+    state: present
+    key: "{{ lookup('file', item) }}"
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/zabbix/*.pub
+
+- name: Create systemd service for CPU power settings
+  ansible.builtin.copy:
+    src: files/systemd/system/set-cpu-power.service
+    dest: /etc/systemd/system/set-cpu-power.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable and start the CPU power settings service
+  ansible.builtin.systemd:
+    name: set-cpu-power.service
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Disable and stop HA services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - pve-ha-crm.service
+    - pve-ha-lrm.service
+    - corosync.service

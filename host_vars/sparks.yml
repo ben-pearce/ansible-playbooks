@@ -38,6 +38,8 @@ common_docker_compose:
     environment:
       - key: HOST
         value: sparks.benpearce.io
+      - key: NPM_HOST_PATTERN
+        value: "^[a-z0-9-]+\\.dev\\.sparks\\.benpearce\\.io$"
       - key: AUTHELIA_HOST
         value: login.jessie.benpearce.io
       - key: ADMIN_MAIL

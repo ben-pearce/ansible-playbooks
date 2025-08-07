@@ -12,7 +12,7 @@ exclude_if_present:
 encryption_passphrase: '{credential container borg_passphrase}'
 compression: auto,zstd
 archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
-lock_wait: 30
+lock_wait: 90
 commands:
   - before: everything
     run:

@@ -13,5 +13,5 @@
         --archive latest"
   delegate_to: barbie
   with_items: '{{ barbie_borg_configs[inventory_hostname].source_directories }}'
-  register: result
-  failed_when: result.rc != 0 and result.rc != 1
+  register: barbie_restore_result
+  failed_when: barbie_restore_result.rc != 0 and barbie_restore_result.rc != 1
