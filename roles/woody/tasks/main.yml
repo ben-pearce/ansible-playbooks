@@ -10,14 +10,14 @@
   ansible.builtin.find:
     paths: /mnt/data/discourse
     file_type: any
-  register: discourse_install_directory
+  register: woody_discourse_install_directory
 
 - name: Move discourse directory
   ansible.builtin.command: mv /mnt/data/discourse /mnt/data/discourse.bak
   args:
     removes: /mnt/data/discourse
     creates: /mnt/data/discourse.bak
-  when: discourse_install_directory.matched >= 1
+  when: woody_discourse_install_directory.matched >= 1
 
 - name: Git checkout discourse repository
   ansible.builtin.git:
@@ -29,7 +29,7 @@
   ansible.builtin.file:
     path: '{{ item }}'
     state: absent
-  when: discourse_install_directory.matched >= 1
+  when: woody_discourse_install_directory.matched >= 1
   with_items:
     - /mnt/data/discourse/containers
     - /mnt/data/discourse/shared
@@ -37,7 +37,7 @@
 - name: Move discourse backups and configuration
   ansible.builtin.command:
     cmd: mv {{ item.src }} {{ item.dest }}
-  when: discourse_install_directory.matched >= 1
+  when: woody_discourse_install_directory.matched >= 1
   changed_when: item.rc == 0
   with_items:
     - src: /mnt/data/discourse.bak/containers
@@ -49,11 +49,11 @@
   ansible.builtin.file:
     path: /mnt/data/discourse.bak
     state: absent
-  when: discourse_install_directory.matched >= 1
+  when: woody_discourse_install_directory.matched >= 1
 
 - name: Boot discourse
   ansible.builtin.command:
     cmd: ./launcher rebuild app
     chdir: /mnt/data/discourse
-  register: discourse_boot
-  changed_when: discourse_boot.rc == 0
+  register: woody_discourse_boot
+  changed_when: woody_discourse_boot.rc == 0

@@ -15,7 +15,7 @@
   ansible.builtin.find:
     paths: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
     patterns: '*.json'
-  register: repos
+  register: barbie_repos
 
 - name: Generate rclone config
   ansible.builtin.template:
@@ -23,7 +23,7 @@
     dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/rclone.conf'
     mode: '0644'
   vars:
-    drives: '{{ repos.matched }}'
+    drives: '{{ barbie_repos.matched }}'
 
 - name: Create borgmatic config location
   ansible.builtin.file:

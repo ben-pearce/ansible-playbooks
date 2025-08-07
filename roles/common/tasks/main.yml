@@ -1,8 +1,8 @@
 - name: Update apt cache
   ansible.builtin.apt:
     update_cache: true
-  register: result
-  until: result is not failed
+  register: common_result
+  until: common_result is not failed
   delay: 6
   retries: 10
 
@@ -12,8 +12,8 @@
       - python3-paramiko
     state: present
     update_cache: true
-  register: result
-  until: result is not failed
+  register: common_result
+  until: common_result is not failed
   delay: 6
   retries: 10
 
@@ -47,9 +47,9 @@
 
 - name: Find user SSH keys
   ansible.builtin.set_fact:
-    user_keys: >-
+    common_user_keys: >-
       {{
-        user_keys | default([]) +
+        common_user_keys | default([]) +
         [{'user': item.path, 'files': ssh_files}]
       }}
   vars:
@@ -62,7 +62,7 @@
     path: /home/{{ item }}/.ssh/
     state: directory
     mode: '0700'
-  loop: "{{ user_keys | default([]) | map(attribute='user') }}"
+  loop: "{{ common_user_keys | default([]) | map(attribute='user') }}"
 
 - name: Copy user SSH keys
   ansible.builtin.copy:
@@ -72,7 +72,7 @@
     group: '{{ item.0.user }}'
     mode: '0600'
   with_subelements:
-    - '{{ user_keys | default([]) }}'
+    - '{{ common_user_keys | default([]) }}'
     - files
 
 - name: Set authorized keys for root
@@ -90,7 +90,7 @@
     key: "{{ lookup('file', item.1) }}"
   when: item.1 is match('.*\.pub')
   with_subelements:
-    - '{{ user_keys | default([]) }}'
+    - '{{ common_user_keys | default([]) }}'
     - files
 
 - name: Add SSH keys to known hosts

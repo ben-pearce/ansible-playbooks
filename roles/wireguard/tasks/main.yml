@@ -9,8 +9,8 @@
 
 - name: Save iptables rules using netfilter-persistent
   ansible.builtin.command: netfilter-persistent save
-  register: iptables_save
-  changed_when: iptables_save.rc == 0
+  register: wireguard_iptables_save
+  changed_when: wireguard_iptables_save.rc == 0
 
 - name: Create configuration directory
   ansible.builtin.file:

@@ -20,14 +20,14 @@
   ansible.builtin.find:
     paths: /mnt/data/mailcow-dockerized
     file_type: any
-  register: mailcow_install_directory
+  register: rc_mailcow_install_directory
 
 - name: Move mailcow directory
   ansible.builtin.command: mv /mnt/data/mailcow-dockerized /mnt/data/mailcow-dockerized.bak
   args:
     removes: /mnt/data/mailcow-dockerized
     creates: /mnt/data/mailcow-dockerized.bak
-  when: mailcow_install_directory.matched >= 1
+  when: rc_mailcow_install_directory.matched >= 1
 
 - name: Git checkout mailcow repository
   ansible.builtin.git:
@@ -39,22 +39,22 @@
   ansible.builtin.file:
     path: /mnt/data/mailcow-dockerized/data
     state: absent
-  when: mailcow_install_directory.matched >= 1
+  when: rc_mailcow_install_directory.matched >= 1
 
 - name: Move mailcow backups and configuration
   ansible.builtin.shell: |
     mv /mnt/data/mailcow-dockerized.bak/backups /mnt/data/mailcow-dockerized;
     mv /mnt/data/mailcow-dockerized.bak/data /mnt/data/mailcow-dockerized;
     mv /mnt/data/mailcow-dockerized.bak/mailcow.conf /mnt/data/mailcow-dockerized
-  when: mailcow_install_directory.matched >= 1
-  register: move_mailcow_backups
-  changed_when: move_mailcow_backups.rc == 0
+  when: rc_mailcow_install_directory.matched >= 1
+  register: rc_move_mailcow_backups
+  changed_when: rc_move_mailcow_backups.rc == 0
 
 - name: Delete mailcow temp directory
   ansible.builtin.file:
     path: /mnt/data/mailcow-dockerized.bak
     state: absent
-  when: mailcow_install_directory.matched >= 1
+  when: rc_mailcow_install_directory.matched >= 1
 
 - name: Boot mailcow services
   community.docker.docker_compose_v2:

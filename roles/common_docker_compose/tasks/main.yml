@@ -29,7 +29,7 @@
     file_type: file
   delegate_to: localhost
   become: false
-  register: secrets_files
+  register: common_docker_compose_secrets
 
 - name: Copy secrets
   ansible.builtin.copy:
@@ -41,7 +41,7 @@
   with_nested:
     - "{{ common_docker_compose }}"
     - "{{ lookup('ansible.builtin.fileglob', '{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker/*').split(',') }}"
-  when: secrets_files.matched > 0
+  when: common_docker_compose_secrets.matched > 0
 
 - name: Create and start services
   community.docker.docker_compose_v2:

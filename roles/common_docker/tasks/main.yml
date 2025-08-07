@@ -42,7 +42,7 @@
 - name: Check if docker daemon configuration exists
   ansible.builtin.stat:
     path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/docker/daemon.json"
-  register: docker_daemon_config
+  register: common_docker_daemon_config
   delegate_to: localhost
   become: false
 
@@ -53,10 +53,10 @@
     owner: root
     group: root
     mode: '0600'
-  when: docker_daemon_config.stat.exists
+  when: common_docker_daemon_config.stat.exists
 
 - name: Restart docker service
   ansible.builtin.service:
     name: docker
     state: restarted
-  when: docker_daemon_config.stat.exists
+  when: common_docker_daemon_config.stat.exists
