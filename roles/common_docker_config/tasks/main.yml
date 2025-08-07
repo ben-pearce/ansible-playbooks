@@ -1,6 +1,6 @@
 - name: Find user docker configs
   ansible.builtin.set_fact:
-    users_with_config: "{{ users_with_config | default([]) + [item.path] }}"
+    common_docker_config_users: "{{ common_docker_config_users | default([]) + [item.path] }}"
   loop: >-
     {{ lookup(
       'community.general.filetree',
@@ -13,7 +13,7 @@
     path: /home/{{ item }}/.docker/
     state: directory
     mode: '0700'
-  loop: "{{ users_with_config }}"
+  loop: "{{ common_docker_config_users }}"
 
 - name: Copy user docker configs
   ansible.builtin.copy:
@@ -24,4 +24,4 @@
     owner: '{{ item }}'
     group: '{{ item }}'
     mode: '0600'
-  loop: "{{ users_with_config }}"
+  loop: "{{ common_docker_config_users }}"
