@@ -3,6 +3,9 @@
   "extends": [
     "config:recommended"
   ],
+  "ansible-galaxy": {
+    "enabled": false
+  },
   "prHourlyLimit": 15,
   "repositories": ["ben-pearce/ansible-playbooks"]
 }
