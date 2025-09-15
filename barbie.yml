@@ -6,4 +6,5 @@
     - common_docker
     - barbie
     - common_docker_compose
+    - barbie_init
     - barbie_restore

@@ -4,26 +4,12 @@
     state: directory
     mode: '0755'
 
-- name: Copy rclone remote service accounts
+- name: Copy rclone config
   ansible.builtin.copy:
     src: '{{ item }}'
     dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
     mode: '0644'
-  with_fileglob: '../secrets/rclone/*.json'
-
-- name: Find rclone repositories
-  ansible.builtin.find:
-    paths: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
-    patterns: '*.json'
-  register: barbie_repos
-
-- name: Generate rclone config
-  ansible.builtin.template:
-    src: rclone.conf.j2
-    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/rclone.conf'
-    mode: '0644'
-  vars:
-    drives: '{{ barbie_repos.matched }}'
+  with_fileglob: '../secrets/rclone/*'
 
 - name: Create borgmatic config location
   ansible.builtin.file:
