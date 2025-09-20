@@ -1,0 +1,12 @@
+- name: Include borg configs
+  ansible.builtin.include_vars: ../../barbie/vars/main.yml
+
+- name: Initialize borgmatic repositories
+  community.docker.docker_container_exec:
+    container: borgmatic
+    command: |
+      /bin/sh -c "export SMTP_PASSWORD=$(cat /run/secrets/smtp_password) && \
+      borgmatic repo-create \
+        --encryption repokey \
+        --repository /mnt/repository/{{ item.key }}"
+  with_items: '{{ barbie_borg_configs | dict2items }}'
