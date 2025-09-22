@@ -40,6 +40,8 @@ common_docker_compose:
         value: jessie.benpearce.io
       - key: ADMIN_MAIL
         value: me@benpearce.io
+      - key: AUTHENTIK_HOST
+        value: https://authentik.etch.benpearce.io
       - key: TZ
         value: Europe/London
       - key: PUID

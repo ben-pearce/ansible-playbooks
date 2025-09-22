@@ -25,6 +25,10 @@ common_docker_compose:
   - repo: git@github.com:ben-pearce/etch-server-deployment.git
     user: etch
     environment:
+      - key: HOST
+        value: etch.benpearce.io
+      - key: ADMIN_MAIL
+        value: me@benpearce.io
       - key: PUID
         value: 2000
       - key: PGID
@@ -35,6 +39,12 @@ common_docker_compose:
         value: /opt/etch-server-deployment/config
       - key: DATA_DIR
         value: /opt/etch-server-deployment/data
+      - key: SMTP_HOST
+        value: mail.benpearce.io
+      - key: SMTP_USER
+        value: notifications@benpearce.io
+      - key: LAN_SUBNET
+        value: 10.0.0.0/24
       - key: ZBX_HOSTNAME
         value: etch
       - key: ZBX_SERVER_HOST
