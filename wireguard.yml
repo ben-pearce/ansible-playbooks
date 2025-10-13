@@ -6,5 +6,6 @@
     - common_wait
     - common
     - common_docker
+    - common_users
     - wireguard
     - common_docker_compose

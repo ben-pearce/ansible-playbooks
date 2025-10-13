@@ -18,9 +18,9 @@
     mode: '0600'
 
 - name: Generate borgmatic configs
-  ansible.builtin.template:
-    src: borgmatic.d.yaml.j2
+  ansible.builtin.copy:
     dest: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}.yaml'
+    content: '{{ barbie_borg_default_configs | ansible.builtin.combine(item.value, recursive=true, list_merge="append_rp") | to_nice_yaml(indent=2) }}'
     mode: '0644'
   with_items: "{{ barbie_borg_configs | dict2items }}"
 

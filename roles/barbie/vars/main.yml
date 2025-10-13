@@ -1,68 +1,132 @@
+barbie_borg_default_configs:
+  numeric_ids: true
+  atime: true
+  ctime: true
+  files_cache: ctime,size
+  keep_daily: 2
+  keep_weekly: 2
+  keep_monthly: 3
+  exclude_caches: true
+  exclude_if_present:
+    - .nobackup
+  encryption_passphrase: '{credential container borg_passphrase}'
+  compression: auto,zstd
+  archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
+  lock_wait: 90
+  commands:
+    - before: action
+      when: [extract]
+      run: [hooks check-empty]
+  apprise:
+    services:
+      - url: mailtos://${SMTP_PASSWORD}@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}
+        label: mailto
+    send_logs: true
+    states:
+      - fail
+  uptime_kuma:
+    states:
+      - finish
+      - fail
+
 barbie_borg_configs:
   barbie:
+    repositories:
+      - path: /mnt/repository/barbie
+        label: local
+    working_directory: /etc/borgmatic.d/barbie
     source_directories:
       - cloud
       - workspaces
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     exclude_from:
       - /tmp/barbie-excludes
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/atCsHvVap4
-      states:
-        - finish
-        - fail
+    commands:
+      - before: action
+        when: [create]
+        run: [hooks exclude-gitignore-files workspaces /tmp/barbie-excludes]
   jessie:
+    repositories:
+      - path: /mnt/repository/jessie
+        label: local
+    working_directory: /etc/borgmatic.d/jessie
     source_directories:
       - mnt/data/jessie-server-deployment/config
       - mnt/data/jessie-server-deployment/data
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
-      states:
-        - finish
-        - fail
+    commands:
+      - before: everything
+        run: [hooks mount jessie]
+      - before: action
+        when: [create]
+        run: [hooks postgres-dump jessie]
+      - after: action
+        when: [create]
+        run: [hooks postgres-clean jessie]
+      - after: everything
+        run: [hooks unmount jessie]
   etch:
+    repositories:
+      - path: /mnt/repository/etch
+        label: local
+    working_directory: /etc/borgmatic.d/etch
     source_directories:
       - opt/etch-server-deployment/config
       - opt/etch-server-deployment/data
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
-      states:
-        - finish
-        - fail
+    commands:
+      - before: everything
+        run: [hooks mount etch]
+      - before: action
+        when: [create]
+        run: [hooks postgres-dump etch]
+      - after: action
+        when: [create]
+        run: [hooks postgres-clean etch]
+      - after: everything
+        run: [hooks unmount etch]
   rc:
+    repositories:
+      - path: /mnt/repository/rc
+        label: local
+    working_directory: /etc/borgmatic.d/rc
     source_directories:
       - mnt/data/mailcow-dockerized
       - mnt/data/rc-server-deployment
       - mnt/data/docker/volumes
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/VHEcxnEdnQ
       states:
         - finish
         - fail
+    commands:
+      - before: everything
+        run: [hooks mount rc]
+      - after: everything
+        run: [hooks unmount rc]
   sparks:
+    repositories:
+      - path: /mnt/repository/sparks
+        label: local
+    working_directory: /etc/borgmatic.d/sparks
     source_directories:
       - mnt/data/sparks-server-deployment/config
       - mnt/data/sparks-server-deployment/data
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
-      states:
-        - finish
-        - fail
+    commands:
+      - before: everything
+        run: [hooks mount sparks]
+      - after: everything
+        run: [hooks unmount sparks]
   woody:
+    repositories:
+      - path: /mnt/repository/woody
+        label: local
+    working_directory: /etc/borgmatic.d/woody
     source_directories:
       - mnt/data/woody-server-deployment/config
       - mnt/data/woody-server-deployment/data
@@ -70,22 +134,30 @@ barbie_borg_configs:
       - mnt/data/discourse/shared
     exclude_patterns:
       - mnt/data/woody-server-deployment/data/nginx/sites/*/download.zip
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
-      states:
-        - finish
-        - fail
+    commands:
+      - before: everything
+        run: [hooks mount woody]
+      - after: everything
+        run: [hooks unmount woody]
   zurg:
+    repositories:
+      - path: /mnt/repository/zurg
+        label: local
+    working_directory: /etc/borgmatic.d/zurg
     source_directories:
       - opt/zurg-server-deployment/data
-    keep_daily: 2
-    keep_weekly: 2
-    keep_monthly: 3
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
-      states:
-        - finish
-        - fail
+    commands:
+      - before: everything
+        run: [hooks mount zurg]
+      - before: action
+        when: [create]
+        run: [hooks postgres-dump zurg]
+      - after: action
+        when: [create]
+        run: [hooks postgres-clean zurg]
+      - after: everything
+        run: [hooks unmount zurg]

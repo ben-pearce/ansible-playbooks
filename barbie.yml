@@ -4,6 +4,7 @@
   roles:
     - common
     - common_docker
+    - common_users
     - barbie
     - common_docker_compose
     - barbie_init

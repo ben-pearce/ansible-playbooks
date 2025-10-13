@@ -6,5 +6,6 @@
     - common_journald
     - barbie_restore
     - common_docker
+    - common_users
     - rc
     - common_docker_compose

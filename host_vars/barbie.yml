@@ -1,12 +1,14 @@
 common_users:
   - uid: 2000
     name: barbie
-common_sudoers:
+common_users_sudoers:
   - user: barbie
     runas: root
-    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    commands:
+      - /usr/bin/docker compose up*
+      - /usr/bin/docker image prune*
     nopassword: true
-common_ssh_config:
+common_users_ssh_config:
   - user: root
     remote_user: borg
     hostname: "{{ hostvars['jessie'].ansible_host }}"

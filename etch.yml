@@ -4,5 +4,6 @@
   roles:
     - common
     - common_docker
+    - common_users
     - barbie_restore
     - common_docker_compose

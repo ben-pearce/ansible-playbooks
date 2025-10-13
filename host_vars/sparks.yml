@@ -3,19 +3,22 @@ common_users:
     name: sparks
   - uid: 2001
     name: borg
-common_sudoers:
+    groups: [docker]
+common_users_sudoers:
   - user: sparks
     runas: root
-    commands: /usr/bin/docker compose up*, /usr/bin/docker image prune*
+    commands:
+      - /usr/bin/docker compose up*
+      - /usr/bin/docker image prune*
     nopassword: true
   - user: borg
     runas: root
     commands: /usr/lib/sftp-server
     nopassword: true
-common_known_hosts:
+common_users_known_hosts:
   - host: github.com
     user: sparks
-common_ssh_config:
+common_users_ssh_config:
   - user: sparks
     remote_user: git
     hostname: github.com
