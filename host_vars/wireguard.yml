@@ -17,6 +17,7 @@ common_users_ssh_config:
     hostname: github.com
     host: github
     identity_file: /home/wireguard/.ssh/id_ed25519
+wireguard_data_path: /opt/wireguard-server-deployment
 common_docker_compose:
   - repo: git@github.com:ben-pearce/wireguard-server-deployment.git
     user: wireguard
@@ -27,10 +28,8 @@ common_docker_compose:
         value: 2000
       - key: PGID
         value: 2000
-      - key: CONFIG_DIR
-        value: /opt/wireguard-server-deployment/config
       - key: DATA_DIR
-        value: /opt/wireguard-server-deployment/data
+        value: '{{ wireguard_data_path }}'
       - key: PEERDNS
         value: 10.0.0.2
       - key: PEERS

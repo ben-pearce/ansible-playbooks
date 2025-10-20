@@ -14,18 +14,18 @@
 
 - name: Create configuration directory
   ansible.builtin.file:
-    path: /opt/wireguard-server-deployment/config
+    path: '{{ wireguard_data_path }}'
     state: directory
     mode: '0755'
 
 - name: Copy ddclient configuration files
   ansible.builtin.copy:
     src: files/ddclient
-    dest: /opt/wireguard-server-deployment/config
+    dest: '{{ wireguard_data_path }}'
     mode: '0755'
 
 - name: Copy wireguard secrets
   ansible.builtin.copy:
     src: secrets/wireguard
-    dest: /opt/wireguard-server-deployment/config
+    dest: '{{ wireguard_data_path }}'
     mode: '0755'

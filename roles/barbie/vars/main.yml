@@ -52,8 +52,7 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/jessie
     source_directories:
-      - mnt/data/jessie-server-deployment/config
-      - mnt/data/jessie-server-deployment/data
+      - mnt/data/jessie-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
     commands:
@@ -73,8 +72,7 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/etch
     source_directories:
-      - opt/etch-server-deployment/config
-      - opt/etch-server-deployment/data
+      - opt/etch-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
     commands:
@@ -113,8 +111,7 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/sparks
     source_directories:
-      - mnt/data/sparks-server-deployment/config
-      - mnt/data/sparks-server-deployment/data
+      - mnt/data/sparks-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
     commands:
@@ -132,8 +129,6 @@ barbie_borg_configs:
       - mnt/data/woody-server-deployment/data
       - mnt/data/discourse/containers
       - mnt/data/discourse/shared
-    exclude_patterns:
-      - mnt/data/woody-server-deployment/data/nginx/sites/*/download.zip
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
     commands:
@@ -147,7 +142,7 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/zurg
     source_directories:
-      - opt/zurg-server-deployment/data
+      - opt/zurg-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
     commands:

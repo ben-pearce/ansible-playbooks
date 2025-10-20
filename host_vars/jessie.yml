@@ -51,10 +51,8 @@ common_docker_compose:
         value: 2000
       - key: PGID
         value: 2000
-      - key: CONFIG_DIR
-        value: /mnt/data/jessie-server-deployment/config
       - key: DATA_DIR
-        value: /mnt/data/jessie-server-deployment/data
+        value: /mnt/data/jessie-server-deployment
       - key: LOG_DIR
         value: /var/log
       - key: LAN_SUBNET
