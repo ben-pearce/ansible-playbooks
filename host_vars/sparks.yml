@@ -53,10 +53,8 @@ common_docker_compose:
         value: 1000
       - key: PGID
         value: 1000
-      - key: CONFIG_DIR
-        value: /mnt/data/sparks-server-deployment/config
       - key: DATA_DIR
-        value: /mnt/data/sparks-server-deployment/data
+        value: /mnt/data/sparks-server-deployment
       - key: HOST_IP
         value: '10.0.0.5'
       - key: SMTP_USER
