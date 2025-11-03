@@ -52,12 +52,12 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/jessie
     source_directories:
-      - mnt/data/jessie-server-deployment/config
-      - mnt/data/jessie-server-deployment/data
+      - mnt/data/jessie-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
     commands:
-      - before: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks mount jessie]
       - before: action
         when: [create]
@@ -65,7 +65,8 @@ barbie_borg_configs:
       - after: action
         when: [create]
         run: [hooks postgres-clean jessie]
-      - after: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount jessie]
   etch:
     repositories:
@@ -73,12 +74,12 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/etch
     source_directories:
-      - opt/etch-server-deployment/config
-      - opt/etch-server-deployment/data
+      - opt/etch-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
     commands:
-      - before: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks mount etch]
       - before: action
         when: [create]
@@ -86,7 +87,8 @@ barbie_borg_configs:
       - after: action
         when: [create]
         run: [hooks postgres-clean etch]
-      - after: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount etch]
   rc:
     repositories:
@@ -94,18 +96,32 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/rc
     source_directories:
-      - mnt/data/mailcow-dockerized
       - mnt/data/rc-server-deployment
-      - mnt/data/docker/volumes
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/VHEcxnEdnQ
       states:
         - finish
         - fail
     commands:
-      - before: everything
-        run: [hooks mount rc]
-      - after: everything
+      - before: action 
+        when: [create, extract]
+        run: 
+          [hooks mount rc]
+      - before: action
+        when: [create]
+        run: 
+          - >-
+            hooks mailcow-backup rc 
+            /home/rc/rc-server-deployment/mailcow
+            /mnt/data/rc-server-deployment/mailcow
+      - after: action
+        when: [create]
+        run: 
+          - >- 
+            hooks mailcow-clean rc 
+            /mnt/data/rc-server-deployment/mailcow
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount rc]
   sparks:
     repositories:
@@ -113,14 +129,15 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/sparks
     source_directories:
-      - mnt/data/sparks-server-deployment/config
-      - mnt/data/sparks-server-deployment/data
+      - mnt/data/sparks-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
     commands:
-      - before: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks mount sparks]
-      - after: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount sparks]
   woody:
     repositories:
@@ -132,14 +149,14 @@ barbie_borg_configs:
       - mnt/data/woody-server-deployment/data
       - mnt/data/discourse/containers
       - mnt/data/discourse/shared
-    exclude_patterns:
-      - mnt/data/woody-server-deployment/data/nginx/sites/*/download.zip
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
     commands:
-      - before: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks mount woody]
-      - after: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount woody]
   zurg:
     repositories:
@@ -147,11 +164,12 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/zurg
     source_directories:
-      - opt/zurg-server-deployment/data
+      - opt/zurg-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
     commands:
-      - before: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks mount zurg]
       - before: action
         when: [create]
@@ -159,5 +177,6 @@ barbie_borg_configs:
       - after: action
         when: [create]
         run: [hooks postgres-clean zurg]
-      - after: everything
+      - before: action 
+        when: [create, extract]
         run: [hooks unmount zurg]

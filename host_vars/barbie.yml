@@ -45,7 +45,7 @@ common_users_ssh_config:
     host: zurg
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
-barbie_data_path: /mnt/data
+barbie_data_path: /mnt/data/barbie-server-deployment
 common_docker_compose:
   - repo: https://github.com/ben-pearce/barbie-server-deployment
     user: barbie
@@ -58,10 +58,8 @@ common_docker_compose:
         value: 2000
       - key: PGID
         value: 2000
-      - key: CONFIG_DIR
-        value: '{{ barbie_data_path }}/barbie-server-deployment/config'
       - key: DATA_DIR
-        value: '{{ barbie_data_path }}/barbie-server-deployment/data'
+        value: '{{ barbie_data_path }}'
       - key: SMTP_HOST
         value: mail.benpearce.io:587
       - key: SMTP_USER
