@@ -1,32 +1,41 @@
 - name: Create rclone config directory
   ansible.builtin.file:
-    path: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
+    path: '{{ barbie_data_path }}/rclone/'
     state: directory
     mode: '0755'
 
 - name: Copy rclone config
   ansible.builtin.copy:
     src: '{{ item }}'
-    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/rclone/'
+    dest: '{{ barbie_data_path }}/rclone/'
     mode: '0644'
   with_fileglob: '../secrets/rclone/*'
 
 - name: Create borgmatic config location
   ansible.builtin.file:
-    path: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d'
+    path: '{{ barbie_data_path }}/borgmatic/config'
     state: directory
     mode: '0600'
 
 - name: Generate borgmatic configs
   ansible.builtin.copy:
-    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}.yaml'
-    content: '{{ barbie_borg_default_configs | ansible.builtin.combine(item.value, recursive=true, list_merge="append_rp") | to_nice_yaml(indent=2) }}'
+    dest: '{{ barbie_data_path }}/borgmatic/config/{{ item.key }}.yaml'
+    content: >-
+      {{
+        barbie_borg_default_configs |
+        ansible.builtin.combine(
+          item.value,
+          recursive=true,
+          list_merge="append_rp"
+        ) |
+        to_nice_yaml(indent=2)
+      }}
     mode: '0644'
   with_items: "{{ barbie_borg_configs | dict2items }}"
 
 - name: Generate borgmatic remote mountpoints
   ansible.builtin.file:
-    path: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/{{ item.key }}'
+    path: '{{ barbie_data_path }}/borgmatic/config/{{ item.key }}'
     state: directory
     mode: '0755'
   with_items: "{{ barbie_borg_configs | dict2items }}"
@@ -34,6 +43,6 @@
 - name: Copy borgmatic files
   ansible.builtin.copy:
     src: '{{ item }}'
-    dest: '{{ barbie_data_path }}/barbie-server-deployment/config/borgmatic/borgmatic.d/'
+    dest: '{{ barbie_data_path }}/borgmatic/config/'
     mode: '0644'
   with_fileglob: '../secrets/borgmatic.d/*'

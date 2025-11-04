@@ -1,19 +1,24 @@
 common_users:
   - uid: 2000
     name: rc
+    groups: [docker]
   - uid: 2001
     name: borg
     groups: [docker]
 common_users_sudoers:
   - user: borg
     runas: root
-    commands: /usr/lib/sftp-server
+    commands: 
+      - /usr/lib/sftp-server
+      - /home/rc/rc-server-deployment/mailcow/helper-scripts/backup_and_restore.sh
+      - /bin/rm -rf /mnt/data/rc-server-deployment/mailcow*
     nopassword: true
+    setenv: true
   - user: rc
     runas: root
     commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
+      - /bin/chown -R rc /home/rc/rc-server-deployment/*
+      - /home/rc/rc-server-deployment/mailcow/update.sh --force
     nopassword: true
 common_users_known_hosts:
   - host: github.com
@@ -35,18 +40,17 @@ common_journald_config:
     value: 5M
   - option: ForwardToSyslog
     value: 'no'
+rc_data_path: /mnt/data/rc-server-deployment
 common_docker_compose:
-  - repo: https://github.com/ben-pearce/rc-server-deployment.git
+  - repo: git@github.com:ben-pearce/rc-server-deployment.git
     user: rc
     environment:
       - key: PUID
         value: 2000
       - key: PGID
         value: 2000
-      - key: MAILCOW_DIR
-        value: /mnt/data/mailcow-dockerized
       - key: DATA_DIR
-        value: /mnt/data/rc-server-deployment
+        value: '{{ rc_data_path }}'
       - key: ZBX_HOSTNAME
         value: rc
       - key: ZBX_SERVER_HOST

@@ -1,62 +1,30 @@
-- name: Cron job - update mailcow
-  ansible.builtin.cron:
-    name: 'update mailcow'
-    minute: '3'
-    hour: '3'
-    weekday: '0'
-    job: 'cd /mnt/data/mailcow-dockerized/ && ./update.sh --force'
+- name: Install expect
+  ansible.builtin.apt:
+    pkg:
+      - expect
+    state: present
 
-- name: Cron job - backup mailcow
-  ansible.builtin.cron:
-    name: 'backup mailcow'
-    minute: '0'
-    hour: '0'
-    job: >-
-      MAILCOW_BACKUP_LOCATION=/mnt/data/mailcow-dockerized/backups/
-      /mnt/data/mailcow-dockerized/helper-scripts/backup_and_restore.sh
-      backup all --delete-days 1
-
-- name: Check mailcow directory
-  ansible.builtin.find:
-    paths: /mnt/data/mailcow-dockerized
-    file_type: any
-  register: rc_mailcow_install_directory
-
-- name: Move mailcow directory
-  ansible.builtin.command: mv /mnt/data/mailcow-dockerized /mnt/data/mailcow-dockerized.bak
-  args:
-    removes: /mnt/data/mailcow-dockerized
-    creates: /mnt/data/mailcow-dockerized.bak
-  when: rc_mailcow_install_directory.matched >= 1
-
-- name: Git checkout mailcow repository
-  ansible.builtin.git:
-    repo: https://github.com/mailcow/mailcow-dockerized
-    dest: /mnt/data/mailcow-dockerized
-    version: master
-
-- name: Delete fresh mailcow data
-  ansible.builtin.file:
-    path: /mnt/data/mailcow-dockerized/data
-    state: absent
-  when: rc_mailcow_install_directory.matched >= 1
-
-- name: Move mailcow backups and configuration
+- name: Copy mailcow config from backup
   ansible.builtin.shell: |
-    mv /mnt/data/mailcow-dockerized.bak/backups /mnt/data/mailcow-dockerized;
-    mv /mnt/data/mailcow-dockerized.bak/data /mnt/data/mailcow-dockerized;
-    mv /mnt/data/mailcow-dockerized.bak/mailcow.conf /mnt/data/mailcow-dockerized
-  when: rc_mailcow_install_directory.matched >= 1
-  register: rc_move_mailcow_backups
-  changed_when: rc_move_mailcow_backups.rc == 0
+    cp {{ rc_data_path }}/mailcow/*/mailcow.conf /home/rc/rc-server-deployment/mailcow/
+  register: rc_copy_mailcow_config
+  changed_when: rc_copy_mailcow_config.rc == 0
 
-- name: Delete mailcow temp directory
+- name: Set ownership of mailcow configuration
   ansible.builtin.file:
-    path: /mnt/data/mailcow-dockerized.bak
-    state: absent
-  when: rc_mailcow_install_directory.matched >= 1
+    path: /home/rc/rc-server-deployment/mailcow/mailcow.conf
+    owner: rc
+    group: rc
 
 - name: Boot mailcow services
   community.docker.docker_compose_v2:
-    project_src: /mnt/data/mailcow-dockerized
-  with_items: '{{ common_docker_compose }}'
+    project_src: /home/rc/rc-server-deployment/mailcow/
+
+- name: Restore mailcow backup
+  ansible.builtin.shell: |
+    MAILCOW_BACKUP_LOCATION={{ rc_data_path }}/mailcow/ /home/rc/rc-server-deployment/unattended_restore.expect
+
+- name: Restore borgmatic backups
+  community.docker.docker_container_exec:
+    container: certbot
+    command: /etc/letsencrypt/renewal-hooks/deploy/mailcow.sh

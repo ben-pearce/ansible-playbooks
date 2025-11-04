@@ -4,8 +4,8 @@
   roles:
     - common
     - common_journald
-    - barbie_restore
     - common_docker
     - common_users
-    - rc
+    - barbie_restore
     - common_docker_compose
+    - rc

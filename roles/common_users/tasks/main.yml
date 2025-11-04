@@ -112,5 +112,6 @@
     runas: '{{ item.runas }}'
     commands: '{{ item.commands }}'
     nopassword: '{{ item.nopassword | default(omit) }}'
+    setenv: '{{ item.setenv | default(omit) }}'
     state: present
   with_items: '{{ common_users_sudoers | default([]) }}'
