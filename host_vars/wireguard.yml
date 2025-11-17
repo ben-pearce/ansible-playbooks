@@ -1,13 +1,7 @@
 common_users:
   - uid: 2000
     name: wireguard
-common_users_sudoers:
-  - user: wireguard
-    runas: root
-    commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
-    nopassword: true
+    groups: [docker]
 common_users_known_hosts:
   - host: github.com
     user: wireguard

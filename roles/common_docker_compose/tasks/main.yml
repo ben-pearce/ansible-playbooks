@@ -40,10 +40,12 @@
     mode: '0600'
   with_nested:
     - "{{ common_docker_compose }}"
-    - "{{ lookup('ansible.builtin.fileglob', '{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker/*').split(',') }}"
+    - "{{ lookup('ansible.builtin.fileglob', playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/secrets/docker/*').split(',') }}"
   when: common_docker_compose_secrets.matched > 0
 
 - name: Create and start services
+  become: true
+  become_user: '{{ item.user }}'
   community.docker.docker_compose_v2:
     project_src: '{{ ansible_facts.getent_passwd[item.user].4 }}/{{ item.repo | basename | splitext | first }}'
   with_items: '{{ common_docker_compose }}'

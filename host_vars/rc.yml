@@ -8,7 +8,7 @@ common_users:
 common_users_sudoers:
   - user: borg
     runas: root
-    commands: 
+    commands:
       - /usr/lib/sftp-server
       - /home/rc/rc-server-deployment/mailcow/helper-scripts/backup_and_restore.sh
       - /bin/rm -rf /mnt/data/rc-server-deployment/mailcow*
