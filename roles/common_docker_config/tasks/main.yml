@@ -12,6 +12,8 @@
   ansible.builtin.file:
     path: /home/{{ item }}/.docker/
     state: directory
+    owner: '{{ item }}'
+    group: '{{ item }}'
     mode: '0700'
   loop: "{{ common_docker_config_users }}"
 

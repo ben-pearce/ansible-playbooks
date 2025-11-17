@@ -1,3 +1,8 @@
+barbie_empty_check_hook: &empty_check_hook
+  - before: action
+    when: [extract]
+    run: [hooks check-empty]
+
 barbie_borg_default_configs:
   numeric_ids: true
   atime: true
@@ -13,10 +18,6 @@ barbie_borg_default_configs:
   compression: auto,zstd
   archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
   lock_wait: 90
-  commands:
-    - before: action
-      when: [extract]
-      run: [hooks check-empty]
   apprise:
     services:
       - url: mailtos://${SMTP_PASSWORD}@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}
@@ -43,6 +44,7 @@ barbie_borg_configs:
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/atCsHvVap4
     commands:
+      - <<: *empty_check_hook
       - before: action
         when: [create]
         run: [hooks exclude-gitignore-files workspaces /tmp/barbie-excludes]
@@ -56,16 +58,17 @@ barbie_borg_configs:
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount jessie]
+      - <<: *empty_check_hook
       - before: action
         when: [create]
         run: [hooks postgres-dump jessie]
       - after: action
         when: [create]
         run: [hooks postgres-clean jessie]
-      - before: action 
+      - after: action
         when: [create, extract]
         run: [hooks unmount jessie]
   etch:
@@ -78,16 +81,17 @@ barbie_borg_configs:
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount etch]
+      - <<: *empty_check_hook
       - before: action
         when: [create]
         run: [hooks postgres-dump etch]
       - after: action
         when: [create]
         run: [hooks postgres-clean etch]
-      - before: action 
+      - after: action
         when: [create, extract]
         run: [hooks unmount etch]
   rc:
@@ -103,24 +107,25 @@ barbie_borg_configs:
         - finish
         - fail
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
-        run: 
+        run:
           [hooks mount rc]
+      - <<: *empty_check_hook
       - before: action
         when: [create]
-        run: 
+        run:
           - >-
-            hooks mailcow-backup rc 
+            hooks mailcow-backup rc
             /home/rc/rc-server-deployment/mailcow
             /mnt/data/rc-server-deployment/mailcow
       - after: action
         when: [create]
-        run: 
-          - >- 
-            hooks mailcow-clean rc 
+        run:
+          - >-
+            hooks mailcow-clean rc
             /mnt/data/rc-server-deployment/mailcow
-      - before: action 
+      - after: action
         when: [create, extract]
         run: [hooks unmount rc]
   sparks:
@@ -133,10 +138,11 @@ barbie_borg_configs:
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount sparks]
-      - before: action 
+      - <<: *empty_check_hook
+      - after: action
         when: [create, extract]
         run: [hooks unmount sparks]
   woody:
@@ -145,17 +151,25 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/woody
     source_directories:
-      - mnt/data/woody-server-deployment/config
-      - mnt/data/woody-server-deployment/data
-      - mnt/data/discourse/containers
-      - mnt/data/discourse/shared
+      - mnt/data/woody-server-deployment
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount woody]
-      - before: action 
+      - <<: *empty_check_hook
+      - before: action
+        when: [create]
+        run:
+          - hooks discourse-backup woody discourse
+          - hooks gitlab-backup woody solero-gitlab
+      - after: action
+        when: [create]
+        run:
+          - hooks discourse-clean woody discourse
+          - hooks gitlab-clean woody solero-gitlab
+      - after: action
         when: [create, extract]
         run: [hooks unmount woody]
   zurg:
@@ -168,15 +182,16 @@ barbie_borg_configs:
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount zurg]
+      - <<: *empty_check_hook
       - before: action
         when: [create]
         run: [hooks postgres-dump zurg]
       - after: action
         when: [create]
         run: [hooks postgres-clean zurg]
-      - before: action 
+      - after: action
         when: [create, extract]
         run: [hooks unmount zurg]

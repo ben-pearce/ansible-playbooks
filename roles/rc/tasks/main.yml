@@ -24,7 +24,7 @@
   ansible.builtin.shell: |
     MAILCOW_BACKUP_LOCATION={{ rc_data_path }}/mailcow/ /home/rc/rc-server-deployment/unattended_restore.expect
 
-- name: Restore borgmatic backups
+- name: Run certbot deploy hook
   community.docker.docker_container_exec:
     container: certbot
     command: /etc/letsencrypt/renewal-hooks/deploy/mailcow.sh
