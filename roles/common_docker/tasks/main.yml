@@ -17,7 +17,7 @@
     name: docker
     types: [deb]
     uris: "https://download.docker.com/linux/ubuntu"
-    suites: '{{ ansible_distribution_release }}'
+    suites: '{{ ansible_facts["distribution_release"] }}'
     components: [stable]
     signed_by: https://download.docker.com/linux/ubuntu/gpg
     state: present
@@ -36,7 +36,7 @@
 
 - name: Add the user to Docker group
   ansible.builtin.user:
-    name: "{{ ansible_user_id }}"
+    name: '{{ ansible_facts["user_id"] }}'
     group: docker
 
 - name: Check if docker daemon configuration exists
@@ -54,9 +54,5 @@
     group: root
     mode: '0600'
   when: common_docker_daemon_config.stat.exists
-
-- name: Restart docker service
-  ansible.builtin.service:
-    name: docker
-    state: restarted
-  when: common_docker_daemon_config.stat.exists
+  notify:
+    - Restart docker

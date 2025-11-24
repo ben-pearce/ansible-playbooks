@@ -1,6 +1,7 @@
 common_users:
   - uid: 2000
     name: jessie
+    groups: [docker]
   - uid: 2001
     name: borg
     groups: [docker]
@@ -8,12 +9,6 @@ common_users_sudoers:
   - user: borg
     runas: root
     commands: /usr/lib/sftp-server
-    nopassword: true
-  - user: jessie
-    runas: root
-    commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
     nopassword: true
 common_users_known_hosts:
   - host: github.com
