@@ -1,73 +1,27 @@
-common_users:
-  - uid: 2000
-    name: jessie
-  - uid: 2001
-    name: borg
-    groups: [docker]
-common_users_sudoers:
-  - user: borg
-    runas: root
-    commands: /usr/lib/sftp-server
-    nopassword: true
-  - user: jessie
-    runas: root
-    commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
-    nopassword: true
-common_users_known_hosts:
-  - host: github.com
-    user: jessie
-common_users_ssh_config:
-  - user: jessie
-    remote_user: git
-    hostname: github.com
-    host: github
-    identity_file: /home/jessie/.ssh/id_ed25519
-common_journald_config:
-  - option: Storage
-    value: volatile
-  - option: Compress
-    value: 'yes'
-  - option: SystemMaxUse
-    value: 50M
-  - option: SystemMaxFileSize
-    value: 5M
-  - option: ForwardToSyslog
-    value: 'no'
 common_docker_compose:
-  - repo: git@github.com:ben-pearce/jessie-server-deployment.git
-    user: jessie
-    environment:
-      - key: HOST
-        value: jessie.benpearce.io
-      - key: ADMIN_MAIL
-        value: me@benpearce.io
-      - key: AUTHENTIK_HOST
-        value: https://authentik.etch.benpearce.io
-      - key: TZ
-        value: Europe/London
-      - key: PUID
-        value: 2000
-      - key: PGID
-        value: 2000
-      - key: DATA_DIR
-        value: /mnt/data/jessie-server-deployment
-      - key: LOG_DIR
-        value: /var/log
-      - key: LAN_SUBNET
-        value: 10.0.0.0/24
-      - key: SMTP_HOST
-        value: mail.benpearce.io
-      - key: SMTP_USER
-        value: notifications@benpearce.io
-      - key: PRINTER_HOST
-        value: printer.benpearce.io
-      - key: NFS_HOST
-        value: lenny.benpearce.io
-      - key: ZBX_HOSTNAME
-        value: jessie
-      - key: ZBX_SERVER_HOST
-        value: zabbix.benpearce.io
-      - key: ZBX_REFRESHACTIVECHECKS
-        value: 60
+  repo: git@github.com:ben-pearce/jessie-server-deployment.git
+  environment:
+    - key: HOST
+      value: jessie.benpearce.io
+    - key: ADMIN_MAIL
+      value: me@benpearce.io
+    - key: AUTHENTIK_HOST
+      value: https://authentik.etch.benpearce.io
+    - key: LOG_DIR
+      value: /var/log
+    - key: LAN_SUBNET
+      value: 10.0.0.0/24
+    - key: SMTP_HOST
+      value: mail.benpearce.io
+    - key: SMTP_USER
+      value: notifications@benpearce.io
+    - key: PRINTER_HOST
+      value: printer.benpearce.io
+    - key: NFS_HOST
+      value: lenny.benpearce.io
+    - key: ZBX_HOSTNAME
+      value: jessie
+    - key: ZBX_SERVER_HOST
+      value: zabbix.benpearce.io
+    - key: ZBX_REFRESHACTIVECHECKS
+      value: 60

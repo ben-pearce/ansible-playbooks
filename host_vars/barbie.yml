@@ -1,13 +1,3 @@
-common_users:
-  - uid: 2000
-    name: barbie
-common_users_sudoers:
-  - user: barbie
-    runas: root
-    commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
-    nopassword: true
 common_users_ssh_config:
   - user: root
     remote_user: borg
@@ -45,30 +35,20 @@ common_users_ssh_config:
     host: zurg
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
-barbie_data_path: /mnt/data/barbie-server-deployment
 common_docker_compose:
-  - repo: https://github.com/ben-pearce/barbie-server-deployment
-    user: barbie
-    environment:
-      - key: ADMIN_EMAIL
-        value: me@benpearce.io
-      - key: TZ
-        value: Europe/London
-      - key: PUID
-        value: 2000
-      - key: PGID
-        value: 2000
-      - key: DATA_DIR
-        value: '{{ barbie_data_path }}'
-      - key: SMTP_HOST
-        value: mail.benpearce.io:587
-      - key: SMTP_USER
-        value: notifications@benpearce.io
-      - key: NFS_HOST
-        value: lenny.benpearce.io
-      - key: ZBX_HOSTNAME
-        value: barbie
-      - key: ZBX_SERVER_HOST
-        value: zabbix.benpearce.io
-      - key: ZBX_REFRESHACTIVECHECKS
-        value: 60
+  repo: git@github.com:ben-pearce/barbie-server-deployment
+  environment:
+    - key: ADMIN_EMAIL
+      value: me@benpearce.io
+    - key: SMTP_HOST
+      value: mail.benpearce.io:587
+    - key: SMTP_USER
+      value: notifications@benpearce.io
+    - key: NFS_HOST
+      value: lenny.benpearce.io
+    - key: ZBX_HOSTNAME
+      value: barbie
+    - key: ZBX_SERVER_HOST
+      value: zabbix.benpearce.io
+    - key: ZBX_REFRESHACTIVECHECKS
+      value: 60

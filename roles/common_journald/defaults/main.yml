@@ -1,1 +1,12 @@
 common_journald_drop_in: zz-ansible.conf
+common_journald_config:
+  - option: Storage
+    value: volatile
+  - option: Compress
+    value: 'yes'
+  - option: SystemMaxUse
+    value: 50M
+  - option: SystemMaxFileSize
+    value: 5M
+  - option: ForwardToSyslog
+    value: 'no'

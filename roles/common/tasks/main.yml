@@ -16,3 +16,13 @@
   until: common_result is not failed
   delay: 6
   retries: 10
+
+- name: Copy host keys
+  ansible.builtin.copy:
+    src: '{{ item }}'
+    dest: /etc/ssh
+    owner: root
+    group: root
+    mode: '0600'
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh_host_keys/*

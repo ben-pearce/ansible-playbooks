@@ -1,0 +1,52 @@
+- name: Set users with abilities
+  ansible.builtin.set_fact:
+    common_users_abilities_config: >-
+      {{
+        common_users |
+        selectattr('abilities', 'defined') |
+        selectattr('abilities', 'truthy') |
+        list
+      }}
+
+- name: Deploy ability script for each user
+  ansible.builtin.template:
+    src: user-abilities.sh.j2
+    dest: /usr/local/bin/{{ item.name }}-abilities
+    owner: root
+    group: root
+    mode: "0755"
+  vars:
+    ability_scripts: |
+      {% set out = {} %}
+      {% for ability in item.abilities %}
+      {% set _ = out.update({
+        ability: lookup('ansible.builtin.file', lookup('ansible.builtin.first_found', {
+            'files': [
+              playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/files/abilities/' ~ ability,
+              role_path ~ '/files/abilities/' ~ ability
+            ],
+            'skip': True
+          })
+        )}) %}
+      {% endfor %}
+      {{ out }}
+  with_items: '{{ common_users_abilities_config }}'
+
+- name: Copy ability shortcut
+  ansible.builtin.copy:
+    src: files/ability-shell
+    dest: /usr/local/bin/ability
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Configure ability runas root sudoers
+  community.general.sudoers:
+    name: '{{ item.name }}-abilities'
+    user: '{{ item.name }}'
+    runas: root
+    commands: /usr/local/bin/{{ item.name }}-abilities
+    nopassword: true
+    setenv: true
+    state: present
+  with_items: '{{ common_users_abilities_config }}'

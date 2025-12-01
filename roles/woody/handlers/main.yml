@@ -1,0 +1,7 @@
+- name: Build Discourse container
+  ansible.builtin.command:
+    cmd: ./launcher rebuild {{ woody_discourse_container_name }}
+    chdir: "{{ woody_discourse_container_path }}"
+  become: true
+  register: woody_discourse_rebuild_output
+  changed_when: woody_discourse_rebuild_output.rc != 0

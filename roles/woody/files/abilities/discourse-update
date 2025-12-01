@@ -1,0 +1,33 @@
+#!/bin/bash
+set -euo pipefail
+
+containers=$(docker \
+    container ls \
+    --filter name=discourse \
+    --format "{{.Names}}"
+)
+
+branch=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" rev-parse --abbrev-ref HEAD)
+old_commit=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY"/discourse rev-parse HEAD)
+new_commit=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" ls-tree origin/"$branch" discourse | awk '{print $3}')
+
+echo "🔍 Comparing submodule commits:"
+echo "   Current: $old_commit"
+echo "   New:     $new_commit"
+
+if [ "$old_commit" != "$new_commit" ]; then
+    echo "🚨 discourse submodule reference has changed in parent repo!"
+
+    echo "🔄 Sync submodules"
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" submodule sync --recursive
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" submodule update --init --recursive --force
+
+    echo "⬆️ Run discourse upgrade script"
+    for container in $containers; do
+        "$COMPOSE_REPOSITORY"/discourse/launcher rebuild "$container"
+    done
+
+    echo "✅ discourse update handled successfully."
+else
+    echo "👌 discourse submodule reference unchanged, skipping upgrade."
+fi

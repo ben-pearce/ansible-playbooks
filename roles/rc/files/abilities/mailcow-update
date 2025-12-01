@@ -1,0 +1,33 @@
+#!/bin/bash
+set -euo pipefail
+
+branch=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" rev-parse --abbrev-ref HEAD)
+old_commit=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY"/mailcow rev-parse HEAD)
+new_commit=$(sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" ls-tree origin/"$branch" mailcow | awk '{print $3}')
+
+echo "🔍 Comparing submodule commits:"
+echo "   Current: $old_commit"
+echo "   New:     $new_commit"
+
+if [ "$old_commit" != "$new_commit" ]; then
+    echo "🚨 mailcow submodule reference has changed in parent repo!"
+
+    echo "🧹 Changing ownership of mailcow directory..."
+    chown -R "$COMPOSE_OWNER" "$COMPOSE_REPOSITORY"/mailcow
+
+    echo "🔄 Sync submodules"
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" submodule sync --recursive
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" submodule update --init --recursive --force
+
+    echo "⬆️ Run mailcow upgrade script"
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" branch -D master
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" checkout -b master
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" update-ref refs/remotes/origin/temporary-upstream "$new_commit"
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" branch --set-upstream-to=origin/temporary-upstream
+    sudo "$COMPOSE_REPOSITORY"/mailcow/update.sh --force
+    sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" update-ref -d refs/remotes/origin/temporary-upstream
+
+    echo "✅ mailcow update handled successfully."
+else
+    echo "👌 mailcow submodule reference unchanged, skipping upgrade."
+fi

@@ -1,0 +1,39 @@
+#!/bin/bash
+set -euo pipefail
+
+mode="$1"
+
+containers=$(docker \
+    container ls \
+    --filter name=discourse \
+    --format "{{.Names}}"
+)
+
+backup_dir="/mnt/data/applications/discourse/backups"
+
+if [[ -z "$mode" ]]; then
+    echo "Usage: $0 <create|clean>"
+    exit 1
+fi
+
+case "$mode" in
+    create)
+        for container in $containers; do
+            /usr/bin/docker \
+                exec "$container" \
+                discourse backup
+        done
+        ;;
+    clean)
+        if [[ -d "$backup_dir" ]]; then
+            rm -rf "${backup_dir:?}/"*
+        else
+            echo "Backup directory does not exist: $backup_dir"
+            exit 1
+        fi
+        ;;
+    *)
+        echo "Unknown mode: $mode"
+        exit 1
+        ;;
+esac

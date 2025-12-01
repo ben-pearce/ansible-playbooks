@@ -1,0 +1,36 @@
+#!/bin/bash
+set -euo pipefail
+
+mode="$1"
+
+containers=$(docker \
+    container ls \
+    --filter name=postgres \
+    --format "{{.Names}}"
+)
+
+if [[ -z "$mode" ]]; then
+    echo "Usage: $0 <create|clean>"
+    exit 1
+fi
+
+case "$mode" in
+    create)
+        for container in $containers; do
+            docker exec \
+                "$container" \
+                bash -c "pg_dump -U \$POSTGRES_USER -d \$POSTGRES_DB -f /docker-entrypoint-initdb.d/restore.sql"
+        done
+        ;;
+    clean)
+        for container in $containers; do
+            docker exec \
+                "$container" \
+                rm /docker-entrypoint-initdb.d/restore.sql
+        done
+        ;;
+    *)
+        echo "Unknown mode: $mode"
+        exit 1
+        ;;
+esac

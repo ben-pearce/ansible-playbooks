@@ -1,3 +1,10 @@
+- name: Install required system packages
+  ansible.builtin.apt:
+    pkg:
+      - netfilter-persistent
+    state: present
+    update_cache: true
+
 - name: Open port 25 (SMTP) in iptables
   ansible.builtin.iptables:
     chain: INPUT
@@ -5,7 +12,6 @@
     destination_port: 25
     jump: ACCEPT
     action: insert
-    rule_num: 5
 
 - name: Save iptables rules using netfilter-persistent
   ansible.builtin.command: netfilter-persistent save
@@ -14,18 +20,18 @@
 
 - name: Create configuration directory
   ansible.builtin.file:
-    path: '{{ wireguard_data_path }}'
+    path: '{{ common_docker_compose_data_dir }}'
     state: directory
     mode: '0755'
 
 - name: Copy ddclient configuration files
   ansible.builtin.copy:
     src: files/ddclient
-    dest: '{{ wireguard_data_path }}'
+    dest: '{{ common_docker_compose_data_dir }}'
     mode: '0755'
 
 - name: Copy wireguard secrets
   ansible.builtin.copy:
     src: secrets/wireguard
-    dest: '{{ wireguard_data_path }}'
+    dest: '{{ common_docker_compose_data_dir }}'
     mode: '0755'

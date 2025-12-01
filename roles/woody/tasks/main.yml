@@ -1,59 +1,94 @@
-- name: Cron job - update discourse
-  ansible.builtin.cron:
-    name: 'update discourse'
-    minute: '30'
-    hour: '0'
-    day: '1'
-    job: 'cd /mnt/data/discourse && ./launcher rebuild app'
+- name: Include deploy variables
+  ansible.builtin.include_vars: ../secrets/deploy/vars.yml
 
-- name: Check discourse directory
+- name: Template Discourse configuration
+  ansible.builtin.template:
+    src: "{{ woody_discourse_yaml_src }}"
+    dest: "{{ woody_discourse_container_path }}/containers/{{ woody_discourse_container_name }}.yml"
+    mode: '0600'
+  notify:
+    - Build Discourse container
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Find latest Discourse backup file
   ansible.builtin.find:
-    paths: /mnt/data/discourse
-    file_type: any
-  register: woody_discourse_install_directory
+    paths: "{{ woody_discourse_backup_dir }}"
+    patterns: "*.tar.gz"
+    file_type: file
+    recurse: false
+  register: woody_discourse_backups
 
-- name: Move discourse directory
-  ansible.builtin.command: mv /mnt/data/discourse /mnt/data/discourse.bak
-  args:
-    removes: /mnt/data/discourse
-    creates: /mnt/data/discourse.bak
-  when: woody_discourse_install_directory.matched >= 1
+- name: Set latest Discourse backup fact
+  ansible.builtin.set_fact:
+    woody_latest_discourse_backup: >-
+      {{
+        (
+          woody_discourse_backups.files |
+          sort(attribute='mtime', reverse=True) |
+          first
+        ).path
+      }}
+  when: woody_discourse_backups.files | length > 0
 
-- name: Git checkout discourse repository
-  ansible.builtin.git:
-    repo: https://github.com/discourse/discourse_docker.git
-    dest: /mnt/data/discourse
-    version: main
+- name: Discourse restore
+  community.docker.docker_container_exec:
+    container: "{{ woody_discourse_container_name }}"
+    command: >
+      bash -c "discourse enable_restore &&
+               discourse restore {{ woody_latest_discourse_backup | basename }} &&
+               discourse disable_restore"
+  when: (woody_latest_discourse_backup | default(None)) is not none
 
-- name: Delete fresh discourse data
+- name: Restart discourse
+  community.docker.docker_container:
+    name: '{{ woody_discourse_container_name }}'
+    restart: true
+    state: started
+  when: (woody_latest_discourse_backup | default(None)) is not none
+
+- name: Find latest GitLab backup file
+  ansible.builtin.find:
+    paths: "{{ woody_gitlab_backup_dir }}"
+    patterns: "*.tar"
+    file_type: file
+    recurse: false
+  register: woody_gitlab_backups
+
+- name: Set latest GitLab backup fact
+  ansible.builtin.set_fact:
+    woody_latest_gitlab_backup: >-
+      {{
+        (
+          woody_gitlab_backups.files |
+          sort(attribute='mtime', reverse=True) |
+          first
+        ).path |
+        basename |
+        regex_replace('_gitlab_backup\.tar$', '')
+      }}
+  when: woody_gitlab_backups.files | length > 0
+
+- name: Start Gitlab and wait to be healthy
+  community.docker.docker_compose_v2:
+    project_src: '{{ common_docker_compose_directory }}'
+    services: ['{{ woody_gitlab_container_name }}']
+    wait: true
+
+- name: GitLab restore
+  community.docker.docker_container_exec:
+    container: "{{ woody_gitlab_container_name }}"
+    command: >
+      bash -c "gitlab-ctl stop puma &&
+               gitlab-ctl stop sidekiq &&
+               GITLAB_ASSUME_YES=1 gitlab-backup restore BACKUP={{ woody_latest_gitlab_backup }} &&
+               gitlab-ctl reconfigure &&
+               gitlab-ctl start"
+  when: (woody_latest_gitlab_backup | default(None)) is not none
+
+- name: Clean backups
   ansible.builtin.file:
-    path: '{{ item }}'
+    path: "{{ item.path }}"
     state: absent
-  when: woody_discourse_install_directory.matched >= 1
-  with_items:
-    - /mnt/data/discourse/containers
-    - /mnt/data/discourse/shared
-
-- name: Move discourse backups and configuration
-  ansible.builtin.command:
-    cmd: mv {{ item.src }} {{ item.dest }}
-  when: woody_discourse_install_directory.matched >= 1
-  changed_when: item.rc == 0
-  with_items:
-    - src: /mnt/data/discourse.bak/containers
-      dest: /mnt/data/discourse
-    - src: /mnt/data/discourse.bak/shared
-      dest: /mnt/data/discourse
-
-- name: Delete discourse temp directory
-  ansible.builtin.file:
-    path: /mnt/data/discourse.bak
-    state: absent
-  when: woody_discourse_install_directory.matched >= 1
-
-- name: Boot discourse
-  ansible.builtin.command:
-    cmd: ./launcher rebuild app
-    chdir: /mnt/data/discourse
-  register: woody_discourse_boot
-  changed_when: woody_discourse_boot.rc == 0
+  with_items: "{{ woody_gitlab_backups.files + woody_discourse_backups.files }}"

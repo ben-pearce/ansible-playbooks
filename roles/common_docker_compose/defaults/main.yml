@@ -1,0 +1,5 @@
+common_docker_compose_data_dir: /mnt/data/applications
+common_docker_compose_timezone: Europe/London
+common_docker_compose_user_name: deploy
+common_docker_compose_owner_name: git
+common_docker_compose_directory_name: server-deployment

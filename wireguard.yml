@@ -5,7 +5,10 @@
   roles:
     - common_wait
     - common
-    - common_docker
+    - common_journald
     - common_users
-    - wireguard
+    - common_users_abilities
     - common_docker_compose
+    - common_docker
+    - wireguard
+    - common_docker_compose_start

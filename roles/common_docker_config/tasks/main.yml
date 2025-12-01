@@ -1,27 +1,25 @@
-- name: Find user docker configs
-  ansible.builtin.set_fact:
-    common_docker_config_users: "{{ common_docker_config_users | default([]) + [item.path] }}"
-  loop: >-
-    {{ lookup(
-      'community.general.filetree',
-      '../../' + inventory_hostname + '/secrets/docker_config/'
-    ) }}
-  when: item.state == 'directory'
+- name: Check if docker user configuration exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
+  register: common_docker_config_json
+  delegate_to: localhost
+  become: false
 
-- name: Create user docker directories
-  ansible.builtin.file:
-    path: /home/{{ item }}/.docker/
-    state: directory
-    mode: '0700'
-  loop: "{{ common_docker_config_users }}"
+- name: Set user docker config if set
+  when: common_docker_config_json.stat.exists
+  block:
+    - name: Create user docker directories
+      ansible.builtin.file:
+        path: /root/.docker/
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
 
-- name: Copy user docker configs
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/roles/\
-      {{ inventory_hostname }}/secrets/docker_config/\
-      {{ item }}/config.json"
-    dest: /home/{{ item }}/.docker/
-    owner: '{{ item }}'
-    group: '{{ item }}'
-    mode: '0600'
-  loop: "{{ common_docker_config_users }}"
+    - name: Copy user docker configs
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
+        dest: /root/.docker/config.json
+        owner: root
+        group: root
+        mode: "0600"

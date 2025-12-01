@@ -3,9 +3,12 @@
   become: true
   roles:
     - common
-    - common_docker
+    - common_journald
     - common_users
-    - barbie
+    - common_users_abilities
     - common_docker_compose
+    - barbie
+    - common_docker
+    - common_docker_compose_start
     - barbie_init
-    - barbie_restore
+    - common_restore
