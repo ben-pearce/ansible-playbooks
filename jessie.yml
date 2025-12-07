@@ -4,8 +4,9 @@
   roles:
     - common
     - common_journald
-    - common_docker
     - common_users
-    - barbie_restore
-    - jessie
+    - common_users_abilities
+    - common_restore
     - common_docker_compose
+    - common_docker
+    - common_docker_compose_start

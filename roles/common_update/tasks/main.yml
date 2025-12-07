@@ -10,4 +10,4 @@
 
 - name: Reboot if required
   ansible.builtin.reboot:
-  when: common_update_reboot_required.stat.exists and ansible_hostname != "sparks"
+  when: common_update_reboot_required.stat.exists

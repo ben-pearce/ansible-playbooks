@@ -1,0 +1,29 @@
+#!/bin/bash
+
+{% for name, script in ability_scripts.items() %}
+{{ name }}() {
+{{ script | indent(4, true) }}
+}
+
+{% endfor %}
+
+if [[ $EUID -ne 0 ]]; then
+    echo "Re-running with sudo..."
+    exec sudo "$0" "$@"
+fi
+
+if [[ $# -lt 1 ]]; then
+    echo "Usage: $0 <function> [args...]"
+    exit 1
+fi
+
+func="$1"
+shift 1
+
+# Check if function exists
+if declare -F "$func" >/dev/null 2>&1; then
+    "$func" "$@"
+else
+    echo "Error: function '$func' not found."
+    exit 1
+fi

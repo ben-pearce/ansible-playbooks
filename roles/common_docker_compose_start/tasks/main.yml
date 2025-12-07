@@ -1,0 +1,3 @@
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: '{{ common_docker_compose_directory }}'

@@ -1,0 +1,4 @@
+rc_mailcow_yaml_src: templates/mailcow/mailcow.conf.j2
+
+rc_mailcow_backup_dir: '{{ common_docker_compose_data_dir }}/mailcow/'
+rc_mailcow_container_path: '{{ common_docker_compose_directory }}/mailcow/'

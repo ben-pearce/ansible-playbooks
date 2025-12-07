@@ -4,7 +4,9 @@
   roles:
     - common
     - common_journald
-    - common_docker
     - common_users
-    - sid
+    - common_users_abilities
     - common_docker_compose
+    - common_docker_config
+    - common_docker
+    - common_docker_compose_start

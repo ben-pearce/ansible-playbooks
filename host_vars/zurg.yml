@@ -1,53 +1,7 @@
-common_users:
-  - uid: 2000
-    name: zurg
-  - uid: 2001
-    name: borg
-    groups: [docker]
-common_users_sudoers:
-  - user: borg
-    runas: root
-    commands: /usr/lib/sftp-server
-    nopassword: true
-  - user: zurg
-    runas: root
-    commands:
-      - /usr/bin/docker compose up*
-      - /usr/bin/docker image prune*
-    nopassword: true
-common_users_known_hosts:
-  - host: github.com
-    user: zurg
-common_users_ssh_config:
-  - user: zurg
-    remote_user: git
-    hostname: github.com
-    host: github
-    identity_file: /home/zurg/.ssh/id_ed25519
-common_journald_config:
-  - option: Storage
-    value: volatile
-  - option: Compress
-    value: 'yes'
-  - option: SystemMaxUse
-    value: 50M
-  - option: SystemMaxFileSize
-    value: 5M
-  - option: ForwardToSyslog
-    value: 'no'
 common_docker_compose:
-  - repo: git@github.com:ben-pearce/zurg-server-deployment.git
-    user: zurg
-    environment:
-      - key: HOST
-        value: zurg.benpearce.io
-      - key: ADMIN_MAIL
-        value: me@benpearce.io
-      - key: TZ
-        value: Europe/London
-      - key: PUID
-        value: 2000
-      - key: PGID
-        value: 2000
-      - key: DATA_DIR
-        value: /opt/zurg-server-deployment
+  repo: git@github.com:ben-pearce/zurg-server-deployment.git
+  environment:
+    - key: HOST
+      value: zurg.benpearce.io
+    - key: ADMIN_MAIL
+      value: me@benpearce.io

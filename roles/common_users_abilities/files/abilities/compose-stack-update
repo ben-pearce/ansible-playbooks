@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+
+ref="$1"
+
+# Validate SHA or ref
+if [[ ! "$ref" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+    echo "Invalid ref: $ref" >&2
+    exit 1
+fi
+
+# --- Git operations as git user ---
+sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" fetch --prune origin
+sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY" reset --hard "origin/$ref"
+
+# --- Docker operations as root ---
+docker compose --project-directory "$COMPOSE_REPOSITORY" up -d --remove-orphans
+docker image prune -af

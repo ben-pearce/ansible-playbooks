@@ -12,8 +12,8 @@
     value: '{{ item.value }}'
     mode: '0644'
   loop: '{{ common_journald_config }}'
+  notify:
+    - Restart systemd-journald service
 
-- name: Restart systemd-journald service
-  ansible.builtin.service:
-    name: systemd-journald
-    state: restarted
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers

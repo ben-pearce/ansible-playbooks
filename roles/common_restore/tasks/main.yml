@@ -1,0 +1,23 @@
+- name: Check restore marker
+  ansible.builtin.stat:
+    path: /mnt/data/.restored
+  register: common_restore_flag
+
+- name: Restore backup if flag not set
+  when: not common_restore_flag.stat.exists
+  block:
+    - name: Restore borgmatic backups
+      community.docker.docker_container_exec:
+        container: borgmatic
+        command: |
+          /bin/sh -c "export SMTP_PASSWORD=$(cat /run/secrets/smtp_password) && borgmatic \
+            --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml extract \
+            --destination /etc/borgmatic.d/{{ inventory_hostname }} \
+            --archive latest"
+      delegate_to: barbie
+
+    - name: Mark restore as complete
+      ansible.builtin.file:
+        path: /mnt/data/.restored
+        state: touch
+        mode: '0600'

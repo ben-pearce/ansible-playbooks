@@ -13,10 +13,6 @@ barbie_borg_default_configs:
   compression: auto,zstd
   archive_name_format: '{{ item.key }}-{now:%Y-%m-%d-%H%M%S}'
   lock_wait: 90
-  commands:
-    - before: action
-      when: [extract]
-      run: [hooks check-empty]
   apprise:
     services:
       - url: mailtos://${SMTP_PASSWORD}@${SMTP_HOST}?user=${SMTP_USER}&to=${ADMIN_EMAIL}&from=${SMTP_USER}
@@ -44,6 +40,12 @@ barbie_borg_configs:
       push_url: https://status.zurg.benpearce.io/api/push/atCsHvVap4
     commands:
       - before: action
+        when: [extract]
+        run: [hooks check-empty cloud]
+      - before: action
+        when: [extract]
+        run: [hooks check-empty workspaces]
+      - before: action
         when: [create]
         run: [hooks exclude-gitignore-files workspaces /tmp/barbie-excludes]
   jessie:
@@ -52,20 +54,20 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/jessie
     source_directories:
-      - mnt/data/jessie-server-deployment
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/yVT6jASluw
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount jessie]
       - before: action
         when: [create]
-        run: [hooks postgres-dump jessie]
+        run: [hooks ability jessie postgres-backup create]
       - after: action
         when: [create]
-        run: [hooks postgres-clean jessie]
-      - before: action 
+        run: [hooks ability jessie postgres-backup clean]
+      - after: action
         when: [create, extract]
         run: [hooks unmount jessie]
   etch:
@@ -74,20 +76,20 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/etch
     source_directories:
-      - opt/etch-server-deployment
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/V1wl7HfgJT
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount etch]
       - before: action
         when: [create]
-        run: [hooks postgres-dump etch]
+        run: [hooks ability etch postgres-backup create]
       - after: action
         when: [create]
-        run: [hooks postgres-clean etch]
-      - before: action 
+        run: [hooks ability etch postgres-backup clean]
+      - after: action
         when: [create, extract]
         run: [hooks unmount etch]
   rc:
@@ -96,31 +98,24 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/rc
     source_directories:
-      - mnt/data/rc-server-deployment
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/VHEcxnEdnQ
       states:
         - finish
         - fail
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
-        run: 
+        run:
           [hooks mount rc]
       - before: action
         when: [create]
-        run: 
-          - >-
-            hooks mailcow-backup rc 
-            /home/rc/rc-server-deployment/mailcow
-            /mnt/data/rc-server-deployment/mailcow
+        run: [hooks ability rc mailcow-backup create]
       - after: action
         when: [create]
-        run: 
-          - >- 
-            hooks mailcow-clean rc 
-            /mnt/data/rc-server-deployment/mailcow
-      - before: action 
+        run: [hooks ability rc mailcow-backup clean]
+      - after: action
         when: [create, extract]
         run: [hooks unmount rc]
   sparks:
@@ -129,14 +124,14 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/sparks
     source_directories:
-      - mnt/data/sparks-server-deployment
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/r0XwLadMNt
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount sparks]
-      - before: action 
+      - after: action
         when: [create, extract]
         run: [hooks unmount sparks]
   woody:
@@ -145,17 +140,24 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/woody
     source_directories:
-      - mnt/data/woody-server-deployment/config
-      - mnt/data/woody-server-deployment/data
-      - mnt/data/discourse/containers
-      - mnt/data/discourse/shared
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/zwzCWI5lIA
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount woody]
-      - before: action 
+      - before: action
+        when: [create]
+        run:
+          - hooks ability woody discourse-backup create
+          - hooks ability woody gitlab-backup create
+      - after: action
+        when: [create]
+        run:
+          - hooks ability woody discourse-backup clean
+          - hooks ability woody gitlab-backup clean
+      - after: action
         when: [create, extract]
         run: [hooks unmount woody]
   zurg:
@@ -164,19 +166,19 @@ barbie_borg_configs:
         label: local
     working_directory: /etc/borgmatic.d/zurg
     source_directories:
-      - opt/zurg-server-deployment
+      - mnt/data/applications
     uptime_kuma:
       push_url: https://status.zurg.benpearce.io/api/push/49B66NYVTx
     commands:
-      - before: action 
+      - before: action
         when: [create, extract]
         run: [hooks mount zurg]
       - before: action
         when: [create]
-        run: [hooks postgres-dump zurg]
+        run: [hooks ability zurg postgres-backup create]
       - after: action
         when: [create]
-        run: [hooks postgres-clean zurg]
-      - before: action 
+        run: [hooks ability zurg postgres-backup clean]
+      - after: action
         when: [create, extract]
         run: [hooks unmount zurg]

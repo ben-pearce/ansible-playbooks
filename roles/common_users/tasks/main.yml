@@ -16,16 +16,6 @@
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/root/*
 
-- name: Copy host keys
-  ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: /etc/ssh
-    owner: root
-    group: root
-    mode: '0600'
-  with_fileglob:
-    - ../../{{ inventory_hostname }}/secrets/ssh/host_keys/*
-
 - name: Find user SSH keys
   ansible.builtin.set_fact:
     common_users_keys: >-
@@ -36,12 +26,14 @@
   vars:
     ssh_files: "{{ lookup('fileglob', item.root + item.path + '/*').split(',') }}"
   with_items: "{{ lookup('community.general.filetree', '../../' + inventory_hostname + '/secrets/ssh/') }}"
-  when: item.state == 'directory' and item.path not in ['root', 'host_keys']
+  when: item.state == 'directory' and item.path not in ['root']
 
 - name: Create user SSH directories
   ansible.builtin.file:
     path: /home/{{ item }}/.ssh/
     state: directory
+    owner: '{{ item }}'
+    group: '{{ item }}'
     mode: '0700'
   loop: "{{ common_users_keys | default([]) | map(attribute='user') }}"
 
@@ -75,6 +67,8 @@
     - files
 
 - name: Add SSH keys to known hosts
+  become: true
+  become_user: '{{ item.user }}'
   ansible.builtin.known_hosts:
     name: >-
       {%- if 'port' in item -%}
@@ -97,7 +91,7 @@
 - name: Add hosts to SSH configs
   community.general.ssh_config:
     user: '{{ item.user }}'
-    remote_user: '{{ item.remote_user }}'
+    remote_user: '{{ item.remote_user | default(omit) }}'
     hostname: '{{ item.hostname }}'
     host: '{{ item.host }}'
     identity_file: '{{ item.identity_file }}'

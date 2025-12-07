@@ -6,7 +6,6 @@
     - rc
     - wireguard
     - woody
-    - sparks
   become: true
   roles:
     - common_update

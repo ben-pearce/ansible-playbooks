@@ -1,0 +1,52 @@
+templates:
+  - "templates/postgres.template.yml"
+  - "templates/redis.template.yml"
+  - "templates/web.template.yml"
+  - "templates/web.ratelimited.template.yml"
+  - "templates/cloudflare.template.yml"
+  - "templates/web.socketed.template.yml"
+
+params:
+  db_default_text_search_config: "pg_catalog.english"
+  db_shared_buffers: "4096MB"
+  db_work_mem: "40MB"
+
+env:
+  LANG: en_US.UTF-8
+  DISCOURSE_DEFAULT_LOCALE: en
+  UNICORN_WORKERS: 8
+  DISCOURSE_HOSTNAME: {{ woody_discourse_host }}
+  DOCKER_USE_HOSTNAME: true
+  DISCOURSE_DEVELOPER_EMAILS: '{{ woody_discourse_admin_email }}'
+  DISCOURSE_SMTP_PORT: 587
+  DISCOURSE_SMTP_ADDRESS: '{{ woody_smtp_host }}'
+  DISCOURSE_SMTP_USER_NAME: '{{ woody_smtp_user }}'
+  DISCOURSE_SMTP_PASSWORD: '{{ woody_smtp_password }}'
+  DISCOURSE_SMTP_ENABLE_START_TLS: true
+  DISCOURSE_SMTP_OPENSSL_VERIFY_MODE: none
+
+volumes:
+  - volume:
+      host: discourse
+      guest: /shared
+  - volume:
+      host: {{ woody_discourse_backup_dir }}
+      guest: /shared/backups/default
+  - volume:
+      host: /var/log/discourse
+      guest: /var/log
+
+hooks:
+  after_code:
+    - exec:
+        cd: $home/plugins
+        cmd:
+          - git clone https://github.com/discourse/docker_manager.git
+          - git clone https://github.com/discourse/discourse-custom-header-links
+
+run:
+  - exec: echo "Beginning of custom commands"
+  - exec: echo "End of custom commands"
+
+docker_args:
+  - '--mount type=tmpfs,destination=/shared/postgres_run,tmpfs-mode=1777'

@@ -1,49 +1,70 @@
-- name: Get system user info
-  ansible.builtin.getent:
-    database: passwd
-    key: '{{ item.user }}'
-  with_items: '{{ common_docker_compose }}'
+- name: Get owner info
+  ansible.builtin.user:
+    name: '{{ common_docker_compose.owner | default(common_docker_compose_owner_name) }}'
+    state: present
+  register: common_docker_compose_owner
+  check_mode: true
+
+- name: Get user info
+  ansible.builtin.user:
+    name: '{{ common_docker_compose.user | default(common_docker_compose_user_name) }}'
+    state: present
+  register: common_docker_compose_user
+  check_mode: true
+
+- name: Get stack directory
+  ansible.builtin.set_fact:
+    common_docker_compose_directory: >-
+      {{ common_docker_compose_owner.home }}/{{ common_docker_compose_directory_name }}
 
 - name: Git checkout deployment repository
   become: true
-  become_user: '{{ item.user }}'
+  become_user: '{{ common_docker_compose_owner.name }}'
   ansible.builtin.git:
-    repo: '{{ item.repo }}'
+    repo: '{{ common_docker_compose.repo }}'
     version: main
-    dest: '{{ ansible_facts.getent_passwd[item.user].4 }}/{{ item.repo | basename | splitext | first }}'
-  with_items: '{{ common_docker_compose }}'
+    update: false
+    dest: '{{ common_docker_compose_directory }}'
 
 - name: Generate deployment env
   ansible.builtin.lineinfile:
-    path: '{{ ansible_facts.getent_passwd[item.0.user].4 }}/{{ item.0.repo | basename | splitext | first }}/.env'
+    path: '{{ common_docker_compose_directory }}/.env'
     state: present
-    regexp: "^{{ item.1.key }}="
-    line: "{{ item.1.key }}={{ item.1.value}}"
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
     create: true
     mode: '0644'
-  loop: "{{ common_docker_compose | subelements('environment') }}"
-
-- name: Check if secrets exist
-  ansible.builtin.find:
-    paths: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker"
-    file_type: file
-  delegate_to: localhost
-  become: false
-  register: common_docker_compose_secrets
+  loop: >-
+    {{
+      [
+        { 'key': 'PUID', 'value': common_docker_compose_user.uid },
+        { 'key': 'PGID', 'value': common_docker_compose_user.group },
+        { 'key': 'TZ', 'value': common_docker_compose_timezone },
+        { 'key': 'DATA_DIR', 'value': common_docker_compose_data_dir }
+      ] + common_docker_compose.environment
+    }}
 
 - name: Copy secrets
   ansible.builtin.copy:
-    src: '{{ item.1 }}'
-    dest: '{{ ansible_facts.getent_passwd[item.0.user].4 }}/{{ item.0.repo | basename | splitext | first }}/.secrets/'
-    owner: '{{ item.0.user }}'
-    group: '{{ item.0.user }}'
+    src: '{{ item }}'
+    dest: '{{ common_docker_compose_directory }}/.secrets/'
+    owner: '{{ common_docker_compose_user.name }}'
+    group: '{{ common_docker_compose_user.name }}'
     mode: '0600'
-  with_nested:
-    - "{{ common_docker_compose }}"
-    - "{{ lookup('ansible.builtin.fileglob', '{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker/*').split(',') }}"
-  when: common_docker_compose_secrets.matched > 0
+  loop: "{{ (playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/secrets/docker/*') | fileglob }}"
 
-- name: Create and start services
-  community.docker.docker_compose_v2:
-    project_src: '{{ ansible_facts.getent_passwd[item.user].4 }}/{{ item.repo | basename | splitext | first }}'
-  with_items: '{{ common_docker_compose }}'
+- name: Set system environment variables
+  ansible.builtin.lineinfile:
+    path: '/etc/environment'
+    state: present
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    create: true
+    mode: '0644'
+  loop:
+    - key: COMPOSE_REPOSITORY
+      value: '{{ common_docker_compose_directory }}'
+    - key: COMPOSE_USER
+      value: '{{ common_docker_compose_user.name }}'
+    - key: COMPOSE_OWNER
+      value: '{{ common_docker_compose_owner.name }}'
