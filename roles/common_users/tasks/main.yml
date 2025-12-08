@@ -1,22 +1,26 @@
-- name: Adding users
+- name: 👥 Add Users
+  tags: [users, accounts]
   ansible.builtin.user:
-    name: '{{ item.name }}'
-    groups: '{{ item.groups | default(omit) }}'
-    uid: '{{ item.uid }}'
-    append: '{{ (item.groups is defined) | ternary(true, omit) }}'
-  with_items: '{{ common_users | default([]) }}'
+    name: "{{ item.name }}"
+    groups: "{{ item.groups | default(omit) }}"
+    uid: "{{ item.uid }}"
+    append: "{{ (item.groups is defined) | ternary(true, omit) }}"
+    state: present
+  loop: "{{ common_users_users | default([]) }}"
 
-- name: Copy SSH root key
+- name: 🔑 Copy Root SSH Keys
+  tags: [ssh, root]
   ansible.builtin.copy:
-    src: '{{ item }}'
+    src: "{{ item }}"
     dest: /root/.ssh/
     owner: root
     group: root
-    mode: '0600'
+    mode: "0600"
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/root/*
 
-- name: Find user SSH keys
+- name: 🔍 Collect User SSH Key Files
+  tags: [ssh, users]
   ansible.builtin.set_fact:
     common_users_keys: >-
       {{
@@ -24,55 +28,60 @@
         [{'user': item.path, 'files': ssh_files}]
       }}
   vars:
-    ssh_files: "{{ lookup('fileglob', item.root + item.path + '/*').split(',') }}"
-  with_items: "{{ lookup('community.general.filetree', '../../' + inventory_hostname + '/secrets/ssh/') }}"
+    ssh_files: "{{ lookup('fileglob', item.root ~ item.path ~ '/*').split(',') }}"
+  loop: "{{ lookup('community.general.filetree', '../../' ~ inventory_hostname ~ '/secrets/ssh/') }}"
   when: item.state == 'directory' and item.path not in ['root']
 
-- name: Create user SSH directories
+- name: 📁 Ensure User SSH Dirs
+  tags: [ssh, users]
   ansible.builtin.file:
-    path: /home/{{ item }}/.ssh/
+    path: /home/{{ item }}/.ssh
     state: directory
-    owner: '{{ item }}'
-    group: '{{ item }}'
-    mode: '0700'
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: "0700"
   loop: "{{ common_users_keys | default([]) | map(attribute='user') }}"
 
-- name: Copy user SSH keys
+- name: 📥 Copy User SSH Keys
+  tags: [ssh, users]
   ansible.builtin.copy:
-    src: '{{ item.1 }}'
+    src: "{{ item.1 }}"
     dest: /home/{{ item.0.user }}/.ssh/
-    owner: '{{ item.0.user }}'
-    group: '{{ item.0.user }}'
-    mode: '0600'
+    owner: "{{ item.0.user }}"
+    group: "{{ item.0.user }}"
+    mode: "0600"
   with_subelements:
-    - '{{ common_users_keys | default([]) }}'
+    - "{{ common_users_keys | default([]) }}"
     - files
 
-- name: Set authorized keys for root
+- name: 🔐 Set Root Authorized Keys
+  tags: [ssh, root]
   ansible.posix.authorized_key:
     user: root
     state: present
-    key: "{{ lookup('file', item) }}"
+    key: '{{ lookup("file", item) }}'
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/root/*.pub
 
-- name: Set authorized keys for users
+- name: 🔐 Set User Authorized Keys
+  tags: [ssh, users]
   ansible.posix.authorized_key:
-    user: '{{ item.0.user }}'
+    user: "{{ item.0.user }}"
     state: present
-    key: "{{ lookup('file', item.1) }}"
+    key: '{{ lookup("file", item.1) }}'
   when: item.1 is match('.*\.pub')
   with_subelements:
-    - '{{ common_users_keys | default([]) }}'
+    - "{{ common_users_keys | default([]) }}"
     - files
 
-- name: Add SSH keys to known hosts
+- name: 🏷 Add Known Hosts Entries
+  tags: [ssh, knownhosts]
   become: true
-  become_user: '{{ item.user }}'
+  become_user: "{{ item.user }}"
   ansible.builtin.known_hosts:
     name: >-
       {%- if 'port' in item -%}
-       [{{ item.host }}]:{{ item.port | default(22) | string }}
+       [{{ item.host }}]:{{ item.port | default(22) }}
       {%- else -%}
        {{ item.host }}
       {%- endif -%}
@@ -85,27 +94,29 @@
       {%- else -%}
        ~/.ssh/known_hosts
       {%- endif -%}
-    key: "{{ lookup('pipe', 'ssh-keyscan -p ' + item.port | default(22) | string + ' ' + item.host) }}"
-  with_items: '{{ common_users_known_hosts | default([]) }}'
+    key: "{{ lookup('pipe', 'ssh-keyscan -p ' ~ (item.port | default(22) | string) ~ ' ' ~ item.host) }}"
+  loop: "{{ common_users_known_hosts | default([]) }}"
 
-- name: Add hosts to SSH configs
+- name: 🧭 Add SSH Config Entries
+  tags: [ssh, config]
   community.general.ssh_config:
-    user: '{{ item.user }}'
-    remote_user: '{{ item.remote_user | default(omit) }}'
-    hostname: '{{ item.hostname }}'
-    host: '{{ item.host }}'
-    identity_file: '{{ item.identity_file }}'
+    user: "{{ item.user }}"
+    remote_user: "{{ item.remote_user | default(omit) }}"
+    hostname: "{{ item.hostname }}"
+    host: "{{ item.host }}"
+    identity_file: "{{ item.identity_file }}"
     strict_host_key_checking: "{{ item.strict_host_key_checking | default(omit) }}"
     state: present
-  with_items: '{{ common_users_ssh_config | default([]) }}'
+  loop: "{{ common_users_ssh_config | default([]) }}"
 
-- name: Configure sudoers
+- name: 🛡 Configure Sudoers
+  tags: [sudo, users]
   community.general.sudoers:
-    name: '{{ item.user }}-run-as-{{ item.runas }}'
-    user: '{{ item.user }}'
-    runas: '{{ item.runas }}'
-    commands: '{{ item.commands }}'
-    nopassword: '{{ item.nopassword | default(omit) }}'
-    setenv: '{{ item.setenv | default(omit) }}'
+    name: "{{ item.user }}-run-as-{{ item.runas }}"
+    user: "{{ item.user }}"
+    runas: "{{ item.runas }}"
+    commands: "{{ item.commands }}"
+    nopassword: "{{ item.nopassword | default(omit) }}"
+    setenv: "{{ item.setenv | default(omit) }}"
     state: present
-  with_items: '{{ common_users_sudoers | default([]) }}'
+  loop: "{{ common_users_sudoers | default([]) }}"

@@ -1,19 +1,23 @@
-- name: Ensure journald drop-in directory exists
+- name: "📁 Ensure journald drop-in directory exists"
+  tags: [journald, systemd]
   ansible.builtin.file:
     path: /etc/systemd/journald.conf.d
     state: directory
-    mode: '0755'
+    mode: "0755"
 
-- name: Configure journald
+- name: "⚙️ Configure journald settings"
+  tags: [journald, systemd]
   community.general.ini_file:
     path: /etc/systemd/journald.conf.d/{{ common_journald_drop_in }}
     section: Journal
-    option: '{{ item.option }}'
-    value: '{{ item.value }}'
-    mode: '0644'
-  loop: '{{ common_journald_config }}'
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    mode: "0644"
+    backup: false
+  loop: "{{ common_journald_config }}"
   notify:
-    - Restart systemd-journald service
+    - restart journald
 
-- name: Flush handlers
+- name: "🔄 Apply journald changes"
+  tags: [journald]
   ansible.builtin.meta: flush_handlers

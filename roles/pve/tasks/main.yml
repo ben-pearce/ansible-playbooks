@@ -1,4 +1,5 @@
-- name: Install required system packages
+- name: 📦 Install Required Packages
+  tags: [packages, system]
   ansible.builtin.apt:
     pkg:
       - fuse3
@@ -6,7 +7,8 @@
     state: present
     update_cache: true
 
-- name: Create ffmpeg user
+- name: 👤 Create FFMPEG User
+  tags: [users, ffmpeg]
   ansible.builtin.user:
     name: ffmpeg
     shell: /bin/bash
@@ -15,45 +17,53 @@
       - render
     uid: 2000
     append: true
+    state: present
 
-- name: Set authorized keys for ffmpeg user
+- name: 🔑 Set FFMPEG Authorized Keys
+  tags: [ssh, ffmpeg]
   ansible.posix.authorized_key:
     user: ffmpeg
     state: present
-    key: "{{ lookup('file', item) }}"
+    key: '{{ lookup("file", item) }}'
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/ffmpeg/*.pub
 
-- name: Create zabbix user
+- name: 👤 Create Zabbix User
+  tags: [users, zabbix]
   ansible.builtin.user:
     name: zabbix
     shell: /bin/bash
     uid: 2001
+    state: present
 
-- name: Set authorized keys for zabbix user
+- name: 🔑 Set Zabbix Authorized Keys
+  tags: [ssh, zabbix]
   ansible.posix.authorized_key:
     user: zabbix
     state: present
-    key: "{{ lookup('file', item) }}"
+    key: '{{ lookup("file", item) }}'
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh/zabbix/*.pub
 
-- name: Create systemd service for CPU power settings
+- name: ⚙️ Install CPU Power Service
+  tags: [systemd, service]
   ansible.builtin.copy:
     src: files/systemd/system/set-cpu-power.service
     dest: /etc/systemd/system/set-cpu-power.service
     owner: root
     group: root
-    mode: '0644'
+    mode: "0644"
 
-- name: Enable and start the CPU power settings service
+- name: ▶️ Enable & Start CPU Power Service
+  tags: [systemd, service]
   ansible.builtin.systemd:
     name: set-cpu-power.service
     enabled: true
     state: started
     daemon_reload: true
 
-- name: Disable and stop HA services
+- name: ⛔ Disable & Stop HA Services
+  tags: [systemd, ha]
   ansible.builtin.systemd:
     name: "{{ item }}"
     enabled: false
