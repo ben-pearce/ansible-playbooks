@@ -1,18 +1,23 @@
-- name: Include deploy variables
-  ansible.builtin.include_vars: ../secrets/deploy/vars.yml
+- name: 📂 Include Deploy Variables
+  tags: [vars, woody]
+  ansible.builtin.include_vars:
+    file: ../secrets/deploy/vars.yml
 
-- name: Template Discourse configuration
+- name: 📝 Template Discourse Configuration
+  tags: [discourse, config]
   ansible.builtin.template:
     src: "{{ woody_discourse_yaml_src }}"
     dest: "{{ woody_discourse_container_path }}/containers/{{ woody_discourse_container_name }}.yml"
-    mode: '0600'
+    mode: "0600"
   notify:
-    - Build Discourse container
+    - build discourse
 
-- name: Flush handlers
+- name: 🔄 Flush Handlers
+  tags: [handlers]
   ansible.builtin.meta: flush_handlers
 
-- name: Find latest Discourse backup file
+- name: 🔍 Find Latest Discourse Backup
+  tags: [backup, discourse]
   ansible.builtin.find:
     paths: "{{ woody_discourse_backup_dir }}"
     patterns: "*.tar.gz"
@@ -20,19 +25,21 @@
     recurse: false
   register: woody_discourse_backups
 
-- name: Set latest Discourse backup fact
+- name: 🕒 Set Latest Discourse Backup Fact
+  tags: [backup, discourse]
   ansible.builtin.set_fact:
     woody_latest_discourse_backup: >-
       {{
         (
           woody_discourse_backups.files |
-          sort(attribute='mtime', reverse=True) |
+          sort(attribute='mtime', reverse=true) |
           first
         ).path
       }}
   when: woody_discourse_backups.files | length > 0
 
-- name: Discourse restore
+- name: ♻️ Restore Discourse Backup
+  tags: [discourse, backup]
   community.docker.docker_container_exec:
     container: "{{ woody_discourse_container_name }}"
     command: >
@@ -41,14 +48,16 @@
                discourse disable_restore"
   when: (woody_latest_discourse_backup | default(None)) is not none
 
-- name: Restart discourse
+- name: 🔄 Restart Discourse Container
+  tags: [discourse, docker]
   community.docker.docker_container:
-    name: '{{ woody_discourse_container_name }}'
+    name: "{{ woody_discourse_container_name }}"
     restart: true
     state: started
   when: (woody_latest_discourse_backup | default(None)) is not none
 
-- name: Find latest GitLab backup file
+- name: 🔍 Find Latest GitLab Backup
+  tags: [backup, gitlab]
   ansible.builtin.find:
     paths: "{{ woody_gitlab_backup_dir }}"
     patterns: "*.tar"
@@ -56,13 +65,14 @@
     recurse: false
   register: woody_gitlab_backups
 
-- name: Set latest GitLab backup fact
+- name: 🕒 Set Latest GitLab Backup Fact
+  tags: [backup, gitlab]
   ansible.builtin.set_fact:
     woody_latest_gitlab_backup: >-
       {{
         (
           woody_gitlab_backups.files |
-          sort(attribute='mtime', reverse=True) |
+          sort(attribute='mtime', reverse=true) |
           first
         ).path |
         basename |
@@ -70,13 +80,15 @@
       }}
   when: woody_gitlab_backups.files | length > 0
 
-- name: Start Gitlab and wait to be healthy
+- name: ⏳ Start GitLab Container & Wait
+  tags: [gitlab, docker]
   community.docker.docker_compose_v2:
-    project_src: '{{ common_docker_compose_directory }}'
-    services: ['{{ woody_gitlab_container_name }}']
+    project_src: "{{ common_docker_compose_directory }}"
+    services: ["{{ woody_gitlab_container_name }}"]
     wait: true
 
-- name: GitLab restore
+- name: ♻️ Restore GitLab Backup
+  tags: [gitlab, backup]
   community.docker.docker_container_exec:
     container: "{{ woody_gitlab_container_name }}"
     command: >
@@ -87,8 +99,9 @@
                gitlab-ctl start"
   when: (woody_latest_gitlab_backup | default(None)) is not none
 
-- name: Clean backups
+- name: 🧹 Clean Discourse & GitLab Backups
+  tags: [backup, cleanup]
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
-  with_items: "{{ woody_gitlab_backups.files + woody_discourse_backups.files }}"
+  loop: "{{ woody_gitlab_backups.files + woody_discourse_backups.files }}"
