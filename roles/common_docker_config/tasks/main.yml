@@ -1,14 +1,16 @@
-- name: Check if docker user configuration exists
+- name: "🔍 Check for Docker user config"
+  tags: [docker, config]
   ansible.builtin.stat:
     path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
   register: common_docker_config_json
   delegate_to: localhost
   become: false
 
-- name: Set user docker config if set
+- name: "🛠️ Apply Docker user config if available"
+  tags: [docker, config]
   when: common_docker_config_json.stat.exists
   block:
-    - name: Create user docker directories
+    - name: "📂 Ensure Docker config directory exists"
       ansible.builtin.file:
         path: /root/.docker/
         state: directory
@@ -16,10 +18,11 @@
         group: root
         mode: "0700"
 
-    - name: Copy user docker configs
+    - name: "📄 Deploy Docker config file"
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
         dest: /root/.docker/config.json
         owner: root
         group: root
         mode: "0600"
+        force: false
