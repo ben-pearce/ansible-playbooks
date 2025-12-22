@@ -1,4 +1,4 @@
-common_users:
+common_users_users:
   - uid: 2000
     name: deploy
     abilities:

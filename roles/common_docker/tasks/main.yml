@@ -1,4 +1,5 @@
-- name: Install required system packages
+- name: 🧰 Install System Packages
+  tags: [packages]
   ansible.builtin.apt:
     pkg:
       - apt-transport-https
@@ -12,42 +13,49 @@
     state: present
     update_cache: true
 
-- name: Check if docker daemon configuration exists
+- name: 🔍 Check Docker Daemon Config
+  tags: [docker, config]
   ansible.builtin.stat:
     path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/docker/daemon.json"
   register: common_docker_daemon_config
   delegate_to: localhost
   become: false
 
-- name: Copy docker daemon configuration if set
+- name: 📦 Apply Docker Daemon Config If Present
+  tags: [docker, config]
   when: common_docker_daemon_config.stat.exists
   block:
-    - name: Create docker daemon config directory
+    - name: 📁 Create Docker Config Directory
+      tags: [docker, config]
       ansible.builtin.file:
         path: /etc/docker
         state: directory
-        mode: '0755'
+        mode: "0755"
 
-    - name: Copy docker daemon configuration
+    - name: 📄 Copy Docker Daemon Config
+      tags: [docker, config]
       ansible.builtin.copy:
         src: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/docker/daemon.json"
         dest: /etc/docker/daemon.json
         owner: root
         group: root
-        mode: '0600'
+        mode: "0600"
+        force: false
 
-- name: Add Docker Repository
+- name: 🏗️ Add Docker Repository
+  tags: [docker, packages]
   ansible.builtin.deb822_repository:
     name: docker
     types: [deb]
-    uris: "https://download.docker.com/linux/ubuntu"
+    uris: https://download.docker.com/linux/ubuntu
     suites: '{{ ansible_facts["distribution_release"] }}'
     components: [stable]
     signed_by: https://download.docker.com/linux/ubuntu/gpg
     state: present
     enabled: true
 
-- name: Update apt and install docker-ce
+- name: 🐳 Install Docker Engine
+  tags: [docker, packages]
   ansible.builtin.apt:
     pkg:
       - docker-ce
@@ -58,7 +66,9 @@
     state: present
     update_cache: true
 
-- name: Add the user to Docker group
+- name: 👤 Add User to Docker Group
+  tags: [docker, user]
   ansible.builtin.user:
     name: '{{ ansible_facts["user_id"] }}'
-    group: docker
+    groups: ["docker"]
+    append: true

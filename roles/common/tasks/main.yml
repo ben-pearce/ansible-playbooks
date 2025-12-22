@@ -1,4 +1,5 @@
-- name: Update apt cache
+- name: 🔄 Refresh Apt Cache
+  tags: [packages, apt]
   ansible.builtin.apt:
     update_cache: true
   register: common_result
@@ -6,7 +7,8 @@
   delay: 6
   retries: 10
 
-- name: Install required system packages
+- name: 📦 Install System Packages
+  tags: [packages, apt]
   ansible.builtin.apt:
     pkg:
       - python3-paramiko
@@ -17,12 +19,13 @@
   delay: 6
   retries: 10
 
-- name: Copy host keys
+- name: 🗝️ Copy SSH Host Keys
+  tags: [ssh, security]
   ansible.builtin.copy:
-    src: '{{ item }}'
+    src: "{{ item }}"
     dest: /etc/ssh
     owner: root
     group: root
-    mode: '0600'
+    mode: "{{ '0644' if item.endswith('.pub') else '0600' }}"
   with_fileglob:
     - ../../{{ inventory_hostname }}/secrets/ssh_host_keys/*

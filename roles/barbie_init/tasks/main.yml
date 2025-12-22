@@ -1,7 +1,9 @@
-- name: Include borg configs
+- name: 📚 Load Borg Configuration Vars
+  tags: [borgmatic, config]
   ansible.builtin.include_vars: ../../barbie/vars/main.yml
 
-- name: Initialize borgmatic repositories
+- name: 🏗️ Initialize Borgmatic Repositories
+  tags: [borgmatic, init]
   community.docker.docker_container_exec:
     container: borgmatic
     command: |
@@ -9,4 +11,4 @@
       borgmatic repo-create \
         --encryption repokey \
         --repository /mnt/repository/{{ item.key }}"
-  with_items: '{{ barbie_borg_configs | dict2items }}'
+  with_items: "{{ barbie_borg_configs | dict2items }}"

@@ -1,13 +1,16 @@
-- name: Update and upgrade apt packages
+- name: 🆙 Update & Upgrade Packages
+  tags: [update, packages]
   ansible.builtin.apt:
     upgrade: true
     update_cache: true
 
-- name: Check if reboot required
+- name: 🔍 Check Reboot Flag
+  tags: [reboot, check]
   ansible.builtin.stat:
     path: /var/run/reboot-required
   register: common_update_reboot_required
 
-- name: Reboot if required
+- name: 🔄 Reboot If Needed
+  tags: [reboot]
   ansible.builtin.reboot:
   when: common_update_reboot_required.stat.exists
