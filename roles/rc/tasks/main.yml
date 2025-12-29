@@ -1,69 +1,82 @@
-- name: Include deploy variables
-  ansible.builtin.include_vars: ../secrets/deploy/vars.yml
+- name: 📂 Include Deploy Variables
+  tags: [vars, mailcow]
+  ansible.builtin.include_vars:
+    file: ../secrets/deploy/vars.yml
 
-- name: Install expect
+- name: 📦 Install Expect
+  tags: [packages, mailcow]
   ansible.builtin.apt:
     pkg:
       - expect
     state: present
+    update_cache: true
 
-- name: Find Mailcow backups
+- name: 🔍 Find Mailcow Backups
+  tags: [backup, mailcow]
   ansible.builtin.find:
     paths: "{{ rc_mailcow_backup_dir }}"
     file_type: directory
     recurse: false
   register: rc_mailcow_backups
 
-- name: Find latest Mailcow backup
+- name: 🕒 Select Latest Mailcow Backup
+  tags: [backup, mailcow]
   ansible.builtin.set_fact:
     rc_latest_mailcow_backup: >-
       {{
         (
           rc_mailcow_backups.files |
-          sort(attribute='mtime', reverse=True) |
+          sort(attribute='mtime', reverse=true) |
           first
         ).path
       }}
   when: rc_mailcow_backups.files | length > 0
 
-- name: Template Mailcow configuration
+- name: 📝 Template Mailcow Configuration
+  tags: [config, mailcow]
   ansible.builtin.template:
-    src: '{{ rc_mailcow_yaml_src }}'
-    dest: '{{ rc_mailcow_container_path }}/mailcow.conf'
-    mode: '0600'
-    owner: '{{ common_docker_compose_user.name }}'
-    group: '{{ common_docker_compose_user.group }}'
+    src: "{{ rc_mailcow_yaml_src }}"
+    dest: "{{ rc_mailcow_container_path }}/mailcow.conf"
+    owner: "{{ common_docker_compose_user.name }}"
+    group: "{{ common_docker_compose_user.group }}"
+    mode: "0600"
 
-- name: Boot mailcow services
+- name: ▶️ Boot Mailcow Services
+  tags: [docker, mailcow]
   community.docker.docker_compose_v2:
-    project_src: '{{ rc_mailcow_container_path }}'
+    project_src: "{{ rc_mailcow_container_path }}"
     wait: true
 
-- name: Restore mailcow backup
+- name: ♻️ Restore Mailcow Backup
+  tags: [backup, mailcow]
   ansible.builtin.shell: |
     MAILCOW_BACKUP_LOCATION={{ rc_mailcow_backup_dir }} {{ common_docker_compose_directory }}/unattended_restore.expect
   register: rc_restore_mailcow_backup
   changed_when: rc_restore_mailcow_backup.rc != 0
   when: (rc_latest_mailcow_backup | default(None)) is not none
 
-- name: Start certbot and wait to be healthy
+- name: ⏳ Start Certbot & Wait
+  tags: [docker, certbot]
   community.docker.docker_compose_v2:
-    project_src: '{{ common_docker_compose_directory }}'
-    services: ['certbot']
+    project_src: "{{ common_docker_compose_directory }}"
+    services: ["certbot"]
     wait: true
 
-- name: Run certbot deploy hook
+- name: 🛠 Run Certbot Deploy Hook
+  tags: [docker, certbot]
   community.docker.docker_container_exec:
     container: certbot
     command: /etc/letsencrypt/renewal-hooks/deploy/mailcow.sh
 
-- name: Clean backups
+- name: 🧹 Clean Mailcow Backups
+  tags: [backup, cleanup]
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: absent
-  with_items: "{{ rc_mailcow_backups.files }}"
+  loop: "{{ rc_mailcow_backups.files }}"
 
-- name: Remove expect
+- name: 🗑 Remove Expect
+  tags: [packages, cleanup]
   ansible.builtin.apt:
     pkg:
       - expect

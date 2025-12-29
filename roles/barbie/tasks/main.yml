@@ -1,48 +1,57 @@
-- name: Create rclone config directory
+- name: 📁 Create Rclone Config Directory
+  tags: [rclone, config]
   ansible.builtin.file:
-    path: '{{ common_docker_compose_data_dir }}/rclone/'
+    path: "{{ common_docker_compose_data_dir }}/rclone/"
     state: directory
-    mode: '0755'
+    mode: "0755"
 
-- name: Copy rclone config
+- name: 📄 Copy Rclone Config Files
+  tags: [rclone, config]
   ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: '{{ common_docker_compose_data_dir }}/rclone/'
-    mode: '0644'
-  with_fileglob: '../secrets/rclone/*'
+    src: "{{ item }}"
+    dest: "{{ common_docker_compose_data_dir }}/rclone/"
+    mode: "0644"
+    force: false
+  with_fileglob: "../secrets/rclone/*"
 
-- name: Create borgmatic config location
+- name: 📂 Create Borgmatic Config Directory
+  tags: [borgmatic, config]
   ansible.builtin.file:
-    path: '{{ common_docker_compose_data_dir }}/borgmatic/config'
+    path: "{{ common_docker_compose_data_dir }}/borgmatic/config"
     state: directory
-    mode: '0600'
+    mode: "0600"
 
-- name: Generate borgmatic configs
+- name: 📝 Generate Borgmatic Configs
+  tags: [borgmatic, config]
   ansible.builtin.copy:
-    dest: '{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}.yaml'
+    dest: "{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}.yaml"
     content: >-
       {{
         barbie_borg_default_configs |
         ansible.builtin.combine(
           item.value,
           recursive=true,
-          list_merge="append_rp"
+          list_merge='append_rp'
         ) |
         to_nice_yaml(indent=2)
       }}
-    mode: '0644'
+    mode: "0644"
+    force: false
   with_items: "{{ barbie_borg_configs | dict2items }}"
 
-- name: Generate borgmatic remote mountpoints
+- name: 📦 Create Borgmatic Remote Mountpoints
+  tags: [borgmatic, config]
   ansible.builtin.file:
-    path: '{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}'
+    path: "{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}"
     state: directory
-    mode: '0755'
+    mode: "0755"
   with_items: "{{ barbie_borg_configs | dict2items }}"
 
-- name: Copy borgmatic files
+- name: 📤 Copy Borgmatic Secret Files
+  tags: [borgmatic, config, secrets]
   ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: '{{ common_docker_compose_data_dir }}/borgmatic/config/'
-    mode: '0644'
-  with_fileglob: '../secrets/borgmatic.d/*'
+    src: "{{ item }}"
+    dest: "{{ common_docker_compose_data_dir }}/borgmatic/config/"
+    mode: "0644"
+    force: false
+  with_fileglob: "../secrets/borgmatic.d/*"

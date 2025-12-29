@@ -1,39 +1,44 @@
-- name: Get owner info
+- name: "👤 Fetch owner info"
+  tags: [users, docker]
   ansible.builtin.user:
-    name: '{{ common_docker_compose.owner | default(common_docker_compose_owner_name) }}'
+    name: "{{ common_docker_compose.owner | default(common_docker_compose_owner_name) }}"
     state: present
   register: common_docker_compose_owner
   check_mode: true
 
-- name: Get user info
+- name: "🧑 Fetch user info"
+  tags: [users, docker]
   ansible.builtin.user:
-    name: '{{ common_docker_compose.user | default(common_docker_compose_user_name) }}'
+    name: "{{ common_docker_compose.user | default(common_docker_compose_user_name) }}"
     state: present
   register: common_docker_compose_user
   check_mode: true
 
-- name: Get stack directory
+- name: "📁 Set stack directory"
+  tags: [paths]
   ansible.builtin.set_fact:
     common_docker_compose_directory: >-
       {{ common_docker_compose_owner.home }}/{{ common_docker_compose_directory_name }}
 
-- name: Git checkout deployment repository
+- name: "🌿 Checkout deployment repository"
+  tags: [git, deploy]
   become: true
-  become_user: '{{ common_docker_compose_owner.name }}'
+  become_user: "{{ common_docker_compose_owner.name }}"
   ansible.builtin.git:
-    repo: '{{ common_docker_compose.repo }}'
-    version: main
+    repo: "{{ common_docker_compose.repo }}"
+    version: "main"
     update: false
-    dest: '{{ common_docker_compose_directory }}'
+    dest: "{{ common_docker_compose_directory }}"
 
-- name: Generate deployment env
+- name: "⚙️ Generate deployment env variables"
+  tags: [env, docker]
   ansible.builtin.lineinfile:
-    path: '{{ common_docker_compose_directory }}/.env'
+    path: "{{ common_docker_compose_directory }}/.env"
     state: present
     regexp: "^{{ item.key }}="
     line: "{{ item.key }}={{ item.value }}"
     create: true
-    mode: '0644'
+    mode: "0644"
   loop: >-
     {{
       [
@@ -44,27 +49,29 @@
       ] + common_docker_compose.environment
     }}
 
-- name: Copy secrets
+- name: "🔐 Copy secrets"
+  tags: [secrets]
   ansible.builtin.copy:
-    src: '{{ item }}'
-    dest: '{{ common_docker_compose_directory }}/.secrets/'
-    owner: '{{ common_docker_compose_user.name }}'
-    group: '{{ common_docker_compose_user.name }}'
-    mode: '0600'
+    src: "{{ item }}"
+    dest: "{{ common_docker_compose_directory }}/.secrets/"
+    owner: "{{ common_docker_compose_user.name }}"
+    group: "{{ common_docker_compose_user.name }}"
+    mode: "0600"
   loop: "{{ (playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/secrets/docker/*') | fileglob }}"
 
-- name: Set system environment variables
+- name: "🌍 Set system environment variables"
+  tags: [env, system]
   ansible.builtin.lineinfile:
-    path: '/etc/environment'
+    path: "/etc/environment"
     state: present
     regexp: "^{{ item.key }}="
     line: "{{ item.key }}={{ item.value }}"
     create: true
-    mode: '0644'
+    mode: "0644"
   loop:
     - key: COMPOSE_REPOSITORY
-      value: '{{ common_docker_compose_directory }}'
+      value: "{{ common_docker_compose_directory }}"
     - key: COMPOSE_USER
-      value: '{{ common_docker_compose_user.name }}'
+      value: "{{ common_docker_compose_user.name }}"
     - key: COMPOSE_OWNER
-      value: '{{ common_docker_compose_owner.name }}'
+      value: "{{ common_docker_compose_owner.name }}"
