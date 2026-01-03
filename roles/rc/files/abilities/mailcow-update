@@ -24,7 +24,11 @@ if [ "$old_commit" != "$new_commit" ]; then
     sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" checkout -b master
     sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" update-ref refs/remotes/origin/temporary-upstream "$new_commit"
     sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" branch --set-upstream-to=origin/temporary-upstream
-    sudo "$COMPOSE_REPOSITORY"/mailcow/update.sh --force
+
+    sudo git config --global --add safe.directory "$COMPOSE_REPOSITORY/mailcow"
+    sudo bash -c 'cd "$1" && ./update.sh --force' _ "$COMPOSE_REPOSITORY/mailcow"
+    sudo git config --global --unset-all safe.directory "$COMPOSE_REPOSITORY/mailcow"
+    
     sudo -u "$COMPOSE_OWNER" git -C "$COMPOSE_REPOSITORY/mailcow" update-ref -d refs/remotes/origin/temporary-upstream
 
     echo "✅ mailcow update handled successfully."

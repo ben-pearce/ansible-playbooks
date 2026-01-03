@@ -1,14 +1,16 @@
-- name: Set users with abilities
+- name: 🛠 Set Users With Abilities
+  tags: [users, abilities]
   ansible.builtin.set_fact:
     common_users_abilities_config: >-
       {{
-        common_users |
+        common_users_users |
         selectattr('abilities', 'defined') |
         selectattr('abilities', 'truthy') |
         list
       }}
 
-- name: Deploy ability script for each user
+- name: 📄 Deploy User Ability Scripts
+  tags: [users, abilities, scripts]
   ansible.builtin.template:
     src: user-abilities.sh.j2
     dest: /usr/local/bin/{{ item.name }}-abilities
@@ -30,9 +32,10 @@
         )}) %}
       {% endfor %}
       {{ out }}
-  with_items: '{{ common_users_abilities_config }}'
+  loop: "{{ common_users_abilities_config }}"
 
-- name: Copy ability shortcut
+- name: 🔗 Install Ability Shortcut
+  tags: [abilities, shortcut]
   ansible.builtin.copy:
     src: files/ability-shell
     dest: /usr/local/bin/ability
@@ -40,13 +43,14 @@
     group: root
     mode: "0755"
 
-- name: Configure ability runas root sudoers
+- name: 🛡 Configure Ability Sudoers
+  tags: [sudo, abilities]
   community.general.sudoers:
-    name: '{{ item.name }}-abilities'
-    user: '{{ item.name }}'
+    name: "{{ item.name }}-abilities"
+    user: "{{ item.name }}"
     runas: root
     commands: /usr/local/bin/{{ item.name }}-abilities
     nopassword: true
     setenv: true
     state: present
-  with_items: '{{ common_users_abilities_config }}'
+  loop: "{{ common_users_abilities_config }}"
