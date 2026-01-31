@@ -72,3 +72,10 @@
     - pve-ha-crm.service
     - pve-ha-lrm.service
     - corosync.service
+
+- name: 🩹 Remove subscription nag
+  ansible.builtin.replace:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+    regexp: 'checked_command: (.|\n)+?\},\n\n'
+    replace: 'checked_command: (cmd) => cmd(),\n\n'
+    backup: true
