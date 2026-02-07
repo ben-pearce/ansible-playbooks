@@ -5,7 +5,7 @@ common_docker_compose:
     - key: PEERDNS
       value: 10.0.0.2
     - key: PEERS
-      value: GitHub,Ben,ThinkPadP14s,Pixel10ProXL
+      value: GitHub,Ben,ThinkPadP14s,Pixel10ProXL,Yasmin
     - key: SERVERURL
       value: wireguard.benpearce.io
     - key: SERVERPORT
