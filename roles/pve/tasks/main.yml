@@ -74,8 +74,9 @@
     - corosync.service
 
 - name: 🩹 Remove subscription nag
+  tags: [proxmox]
   ansible.builtin.replace:
     path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
-    regexp: 'checked_command: (.|\n)+?\},\n\n'
+    regexp: 'checked_command: function \(orig_cmd\) (.|\n)+?\},\n\n'
     replace: 'checked_command: (cmd) => cmd(),\n\n'
     backup: true
