@@ -1,0 +1,5 @@
+proxmox_datastore_name: lenny
+proxmox_datastore_nfs_src: lenny.benpearce.io:/mnt/turbo/vm
+
+cloudflare_domain: sarge.benpearce.io
+cloudflare_admin_user: me@benpearce.io
