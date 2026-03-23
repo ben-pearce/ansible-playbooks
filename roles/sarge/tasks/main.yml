@@ -57,6 +57,7 @@
     cmd: >-
       proxmox-backup-manager
       datastore create {{ proxmox_datastore_name }} /mnt/data
+      --gc-schedule daily
   when: >-
     proxmox_datastore_name not in
     sarge_datastore_list.stdout | from_json | map(attribute='name') | list
@@ -189,6 +190,51 @@
         )
       }}
   no_log: true
+  changed_when: true
+
+- name: 🔍 Get verify jobs
+  tags: [verify]
+  ansible.builtin.command: >-
+    proxmox-backup-manager verify-job list --output-format json
+  register: sarge_verify_jobs
+  changed_when: false
+
+- name: ✅ Create verify job
+  tags: [verify]
+  when: >
+    proxmox_datastore_name not in
+    sarge_verify_jobs.stdout | from_json | map(attribute='store') | list
+  ansible.builtin.command: >-
+      proxmox-backup-manager
+      verify-job create {{ proxmox_datastore_name }}-verify
+      --store {{ proxmox_datastore_name }}
+      --ignore-verified 1
+      --outdated-after 30
+      --schedule "sat 00:00"
+  changed_when: true
+
+- name: 🔍 Get notification endpoints
+  tags: [notification]
+  ansible.builtin.command: >-
+    proxmox-backup-manager notification endpoint smtp list
+    --output-format json
+  register: sarge_notification_endpoints
+  changed_when: false
+
+- name: 📮 Create notification endpoint
+  tags: [notification]
+  when: >
+    'notifications-smtp' not in
+    sarge_notification_endpoints.stdout | from_json | map(attribute='name') | list
+  ansible.builtin.command: >-
+      proxmox-backup-manager notification endpoint smtp
+      create notifications-smtp
+      --from-address {{ sarge_smtp_from_address }}
+      --server {{ sarge_smtp_server }}
+      --mode starttls
+      --mailto-user root@pam
+      --username {{ sarge_smtp_from_address }}
+      --password {{ sarge_smtp_password }}
   changed_when: true
 
 - name: 🔍 Get user ACLs
