@@ -36,7 +36,6 @@
         to_nice_yaml(indent=2)
       }}
     mode: "0644"
-    force: false
   with_items: "{{ barbie_borg_configs | dict2items }}"
 
 - name: 📦 Create Borgmatic Remote Mountpoints

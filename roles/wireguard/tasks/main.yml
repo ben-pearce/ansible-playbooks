@@ -6,14 +6,15 @@
     state: present
     update_cache: true
 
-- name: 🔓 Open SMTP Port 25
+- name: 🔓 Open firewall ports
   tags: [firewall, iptables]
   ansible.builtin.iptables:
     chain: INPUT
-    protocol: tcp
-    destination_port: 25
+    protocol: "{{ item.type }}"
+    destination_port: "{{ item.port }}"
     jump: ACCEPT
     action: insert
+  loop: "{{ wireguard_port_forwarding }}"
 
 - name: 💾 Save Iptables Rules
   tags: [firewall, iptables]
@@ -28,11 +29,18 @@
     state: directory
     mode: "0755"
 
+- name: 📝 Copy wireguard server Configuration
+  tags: [docker, ddclient]
+  ansible.builtin.template:
+    src: wireguard/server.conf.j2
+    dest: "{{ common_docker_compose_data_dir }}/wireguard/templates/server.conf"
+    mode: "0755"
+
 - name: 📝 Copy ddclient Configuration
   tags: [docker, ddclient]
-  ansible.builtin.copy:
-    src: files/ddclient
-    dest: "{{ common_docker_compose_data_dir }}"
+  ansible.builtin.template:
+    src: ddclient/ddclient.conf.j2
+    dest: "{{ common_docker_compose_data_dir }}/ddclient/ddclient.conf"
     mode: "0755"
 
 - name: 🔑 Copy Wireguard Secrets

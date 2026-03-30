@@ -24,6 +24,7 @@ barbie_borg_default_configs:
     states:
       - finish
       - fail
+  source_directories_must_exist: false
 
 barbie_borg_configs:
   barbie:

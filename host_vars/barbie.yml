@@ -1,54 +1,37 @@
 common_users_ssh_config:
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['jessie'].ansible_host }}"
+    hostname: jessie.benpearce.io
     host: jessie
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['etch'].ansible_host }}"
+    hostname: etch.benpearce.io
     host: etch
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['rc'].ansible_host }}"
+    hostname: rc.benpearce.io
     host: rc
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['sparks'].ansible_host }}"
+    hostname: sparks.benpearce.io
     host: sparks
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['woody'].ansible_host }}"
+    hostname: woody.benpearce.io
     host: woody
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
   - user: root
     remote_user: borg
-    hostname: "{{ hostvars['zurg'].ansible_host }}"
+    hostname: zurg.benpearce.io
     host: zurg
     strict_host_key_checking: 'no'
     identity_file: /root/.ssh/id_ed25519
-common_docker_compose:
-  repo: git@github.com:ben-pearce/barbie-server-deployment
-  environment:
-    - key: ADMIN_EMAIL
-      value: me@benpearce.io
-    - key: SMTP_HOST
-      value: mail.benpearce.io:587
-    - key: SMTP_USER
-      value: notifications@benpearce.io
-    - key: NFS_HOST
-      value: lenny.benpearce.io
-    - key: ZBX_HOSTNAME
-      value: barbie
-    - key: ZBX_SERVER_HOST
-      value: zabbix.benpearce.io
-    - key: ZBX_REFRESHACTIVECHECKS
-      value: 60
