@@ -7,8 +7,8 @@
     - common_users
     - common_users_abilities
     - common_docker_compose
-    - barbie
+    - borgmatic_config
     - common_docker
     - common_docker_compose_start
-    - barbie_init
-    - common_restore
+    - borgmatic_init
+    - borgmatic_restore

@@ -1,13 +1,14 @@
-- name: Configure rc
-  hosts: rc
+- name: Configure tunnel
+  hosts: tunnel
+  gather_facts: false
   become: true
   roles:
+    - common_wait
     - common
     - common_journald
     - common_users
     - common_users_abilities
-    - borgmatic_restore
     - common_docker_compose
     - common_docker
-    - rc
+    - tunnel
     - common_docker_compose_start

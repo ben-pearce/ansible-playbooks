@@ -1,0 +1,25 @@
+- name: "🔎 Check restore marker"
+  tags: [backup, restore]
+  ansible.builtin.stat:
+    path: /mnt/data/.restored
+  register: borgmatic_restore_flag
+
+- name: "📦 Restore backup if needed"
+  tags: [backup, restore]
+  when: not borgmatic_restore_flag.stat.exists
+  block:
+    - name: "🛠️ Run borgmatic restore"
+      community.docker.docker_container_exec:
+        container: borgmatic
+        command: >-
+          borgmatic
+          --config /etc/borgmatic.d/{{ inventory_hostname }}.yaml extract
+          --destination /etc/borgmatic.d/{{ inventory_hostname }}
+          --archive latest
+      delegate_to: barbie
+
+    - name: "✅ Mark restore as complete"
+      ansible.builtin.file:
+        path: /mnt/data/.restored
+        state: touch
+        mode: "0600"

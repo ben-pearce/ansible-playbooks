@@ -1,0 +1,98 @@
+- name: 🔥 Remove Proxmox PVE enterprise apt repository
+  ansible.builtin.deb822_repository:
+    name: pve-enterprise
+    state: absent
+
+- name: 🔐 Add Proxmox PVE apt repository
+  ansible.builtin.deb822_repository:
+    name: proxmox
+    types: [deb]
+    uris: http://download.proxmox.com/debian/pve
+    suites: '{{ ansible_facts["distribution_release"] }}'
+    components: [pve-no-subscription]
+    signed_by: /usr/share/keyrings/proxmox-archive-keyring.gpg
+    state: present
+    enabled: true
+
+- name: 📦 Install Required Packages
+  tags: [packages, system]
+  ansible.builtin.apt:
+    pkg:
+      - fuse3
+      - lm-sensors
+    state: present
+    update_cache: true
+
+- name: 👤 Create FFMPEG User
+  tags: [users, ffmpeg]
+  ansible.builtin.user:
+    name: ffmpeg
+    shell: /bin/bash
+    groups:
+      - video
+      - render
+    uid: 2000
+    append: true
+    state: present
+
+- name: 🔑 Set FFMPEG Authorized Keys
+  tags: [ssh, ffmpeg]
+  ansible.posix.authorized_key:
+    user: ffmpeg
+    state: present
+    key: '{{ lookup("file", item) }}'
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/ffmpeg/*.pub
+
+- name: 👤 Create Zabbix User
+  tags: [users, zabbix]
+  ansible.builtin.user:
+    name: zabbix
+    shell: /bin/bash
+    uid: 2001
+    state: present
+
+- name: 🔑 Set Zabbix Authorized Keys
+  tags: [ssh, zabbix]
+  ansible.posix.authorized_key:
+    user: zabbix
+    state: present
+    key: '{{ lookup("file", item) }}'
+  with_fileglob:
+    - ../../{{ inventory_hostname }}/secrets/ssh/zabbix/*.pub
+
+- name: ⚙️ Install CPU Power Service
+  tags: [systemd, service]
+  ansible.builtin.copy:
+    src: files/systemd/system/set-cpu-power.service
+    dest: /etc/systemd/system/set-cpu-power.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: ▶️ Enable & Start CPU Power Service
+  tags: [systemd, service]
+  ansible.builtin.systemd:
+    name: set-cpu-power.service
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: ⛔ Disable & Stop HA Services
+  tags: [systemd, ha]
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    enabled: false
+    state: stopped
+  loop:
+    - pve-ha-crm.service
+    - pve-ha-lrm.service
+    - corosync.service
+
+- name: 🩹 Remove subscription nag
+  tags: [proxmox]
+  ansible.builtin.replace:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+    regexp: 'checked_command: function \(orig_cmd\) (.|\n)+?\},\n\n'
+    replace: 'checked_command: (cmd) => cmd(),\n\n'
+    backup: true
