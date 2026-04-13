@@ -1,0 +1,9 @@
+- name: 🏗️ Build Discourse Container
+  tags: [discourse, docker, build]
+  ansible.builtin.command:
+    cmd: ./launcher rebuild {{ restore_discourse_container_name }}
+    chdir: "{{ restore_discourse_container_path }}"
+  become: true
+  register: restore_discourse_rebuild_output
+  changed_when: restore_discourse_rebuild_output.rc != 0
+  listen: build discourse

@@ -1,0 +1,4 @@
+restore_discourse_yaml_src: templates/discourse/discourse.yml.j2
+restore_discourse_container_path: '{{ common_docker_compose_directory }}/discourse'
+restore_discourse_backup_dir: '{{ common_docker_compose_data_dir }}/discourse/backups/'
+restore_discourse_container_name: discourse

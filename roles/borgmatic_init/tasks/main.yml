@@ -1,0 +1,9 @@
+- name: 🏗️ Initialize Borgmatic Repositories
+  tags: [borgmatic, init]
+  community.docker.docker_container_exec:
+    container: borgmatic
+    command: >-
+      borgmatic repo-create
+      --encryption repokey
+      --repository /mnt/repository/{{ item.key }}
+  with_items: "{{ borgmatic_config.configs | dict2items }}"

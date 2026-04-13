@@ -1,0 +1,53 @@
+- name: 🔍 Find Latest GitLab Backup
+  tags: [backup, gitlab]
+  ansible.builtin.find:
+    paths: "{{ restore_gitlab_backup_dir }}"
+    patterns: "*.tar"
+    file_type: file
+    recurse: false
+  register: restore_gitlab_backups
+
+- name: 🕒 Set Latest GitLab Backup Fact
+  tags: [backup, gitlab]
+  ansible.builtin.set_fact:
+    restore_gitlab_latest_backup: >-
+      {{
+        (
+          restore_gitlab_backups.files |
+          sort(attribute='mtime', reverse=true) |
+          first
+        ).path |
+        basename |
+        regex_replace('_gitlab_backup\.tar$', '')
+      }}
+  when: restore_gitlab_backups.files | length > 0
+
+- name: ⏳ Start GitLab Container & Wait
+  tags: [gitlab, docker]
+  community.docker.docker_compose_v2:
+    project_src: "{{ common_docker_compose_directory }}"
+    services: ["{{ restore_gitlab_container_name }}"]
+    wait: true
+
+- name: ♻️ Restore GitLab Backup
+  tags: [gitlab, backup]
+  community.docker.docker_container_exec:
+    container: "{{ restore_gitlab_container_name }}"
+    command: "{{ item.command }}"
+    env: "{{ item.env | default({}) }}"
+  loop:
+    - command: gitlab-ctl stop puma
+    - command: gitlab-ctl stop sidekiq
+    - command: gitlab-backup restore BACKUP={{ restore_gitlab_latest_backup }}
+      env:
+        GITLAB_ASSUME_YES: "1"
+    - command: gitlab-ctl reconfigure
+    - command: gitlab-ctl start
+  when: (restore_gitlab_latest_backup | default(None)) is not none
+
+- name: 🧹 Clean Backups
+  tags: [backup, cleanup]
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ restore_gitlab_backups.files }}"

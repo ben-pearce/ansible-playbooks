@@ -13,17 +13,9 @@
     state: present
     update_cache: true
 
-- name: 🔍 Check Docker Daemon Config
+- name: 📦 Apply Docker Daemon Config
   tags: [docker, config]
-  ansible.builtin.stat:
-    path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/docker/daemon.json"
-  register: common_docker_daemon_config
-  delegate_to: localhost
-  become: false
-
-- name: 📦 Apply Docker Daemon Config If Present
-  tags: [docker, config]
-  when: common_docker_daemon_config.stat.exists
+  when: common_docker_daemon_config is defined
   block:
     - name: 📁 Create Docker Config Directory
       tags: [docker, config]
@@ -32,15 +24,14 @@
         state: directory
         mode: "0755"
 
-    - name: 📄 Copy Docker Daemon Config
+    - name: 📄 Write Docker Daemon Config
       tags: [docker, config]
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/files/docker/daemon.json"
         dest: /etc/docker/daemon.json
+        content: "{{ common_docker_daemon_config | to_nice_json }}"
         owner: root
         group: root
         mode: "0600"
-        force: false
 
 - name: 🏗️ Add Docker Repository
   tags: [docker, packages]

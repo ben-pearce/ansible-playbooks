@@ -1,0 +1,51 @@
+- name: 📦 Install Netfilter Persistent
+  tags: [packages, firewall]
+  ansible.builtin.apt:
+    pkg:
+      - netfilter-persistent
+    state: present
+    update_cache: true
+
+- name: 🔓 Open firewall ports
+  tags: [firewall, iptables]
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: "{{ item.type }}"
+    destination_port: "{{ item.port }}"
+    jump: ACCEPT
+    action: insert
+  loop: "{{ tunnel_port_forwarding }}"
+
+- name: 💾 Save Iptables Rules
+  tags: [firewall, iptables]
+  ansible.builtin.command: netfilter-persistent save
+  register: tunnel_iptables_save
+  changed_when: tunnel_iptables_save.rc == 0
+
+- name: 📁 Create Docker Compose Data Directory
+  tags: [docker, data]
+  ansible.builtin.file:
+    path: "{{ common_docker_compose_data_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: 📝 Copy wireguard server Configuration
+  tags: [docker, ddclient]
+  ansible.builtin.template:
+    src: wireguard/server.conf.j2
+    dest: "{{ common_docker_compose_data_dir }}/wireguard/templates/server.conf"
+    mode: "0755"
+
+- name: 📝 Copy ddclient Configuration
+  tags: [docker, ddclient]
+  ansible.builtin.template:
+    src: ddclient/ddclient.conf.j2
+    dest: "{{ common_docker_compose_data_dir }}/ddclient/ddclient.conf"
+    mode: "0755"
+
+- name: 🔑 Copy Wireguard Secrets
+  tags: [docker, wireguard]
+  ansible.builtin.copy:
+    src: secrets/wireguard
+    dest: "{{ common_docker_compose_data_dir }}"
+    mode: "0755"

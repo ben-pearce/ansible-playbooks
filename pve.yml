@@ -2,4 +2,4 @@
   hosts: pve
   become: true
   roles:
-    - pve
+    - proxmox_virtual_environment

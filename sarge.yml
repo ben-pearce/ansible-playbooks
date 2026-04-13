@@ -2,4 +2,4 @@
   hosts: sarge
   become: true
   roles:
-    - sarge
+    - proxmox_backup_server
