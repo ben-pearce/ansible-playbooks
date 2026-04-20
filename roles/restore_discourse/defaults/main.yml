@@ -1,0 +1,30 @@
+restore_discourse_config_defaults:
+  templates:
+    - "templates/postgres.template.yml"
+    - "templates/redis.template.yml"
+    - "templates/web.template.yml"
+  params:
+    db_default_text_search_config: "pg_catalog.english"
+    db_shared_buffers: "4096MB"
+    db_work_mem: "40MB"
+  env:
+    LANG: en_US.UTF-8
+    DISCOURSE_DEFAULT_LOCALE: en
+    UNICORN_WORKERS: 8
+    DOCKER_USE_HOSTNAME: true
+  volumes:
+    - volume:
+        host: discourse
+        guest: /shared
+  hooks:
+    after_code:
+      - exec:
+          cd: $home/plugins
+          cmd:
+            - git clone https://github.com/discourse/docker_manager.git
+            - git clone https://github.com/discourse/discourse-custom-header-links
+  docker_args:
+    - '--mount type=tmpfs,destination=/shared/postgres_run,tmpfs-mode=1777'
+restore_discourse_container_path: '{{ common_docker_compose_directory }}/discourse'
+restore_discourse_backup_dir: '{{ common_docker_compose_data_dir }}/discourse/backups/'
+restore_discourse_container_name: discourse

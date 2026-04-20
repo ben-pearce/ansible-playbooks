@@ -1,0 +1,67 @@
+- name: 📝 Write Discourse Configuration
+  tags: [discourse, config]
+  ansible.builtin.copy:
+    dest: "{{ restore_discourse_container_path }}/containers/{{ restore_discourse_container_name }}.yml"
+    content: >-
+      {{
+        restore_discourse_config_defaults |
+        ansible.builtin.combine(
+          restore_discourse_config,
+          recursive=true,
+          list_merge='append_rp'
+        ) |
+        to_nice_yaml(indent=2)
+      }}
+    mode: "0600"
+
+- name: 🔄 Flush Handlers
+  tags: [handlers]
+  ansible.builtin.meta: flush_handlers
+
+- name: 🔍 Find Latest Discourse Backup
+  tags: [backup, discourse]
+  ansible.builtin.find:
+    paths: "{{ restore_discourse_backup_dir }}"
+    patterns: "*.tar.gz"
+    file_type: file
+    recurse: false
+  register: restore_discourse_backups
+
+- name: 🕒 Set Latest Discourse Backup Fact
+  tags: [backup, discourse]
+  ansible.builtin.set_fact:
+    restore_discourse_latest_backup: >-
+      {{
+        (
+          restore_discourse_backups.files |
+          sort(attribute='mtime', reverse=true) |
+          first
+        ).path
+      }}
+  when: restore_discourse_backups.files | length > 0
+
+- name: ♻️ Restore Discourse Backup
+  tags: [discourse, backup]
+  community.docker.docker_container_exec:
+    container: "{{ restore_discourse_container_name }}"
+    command: "{{ item }}"
+  loop:
+    - discourse enable_restore
+    - discourse restore {{ restore_discourse_latest_backup | basename }}
+    - discourse disable_restore
+  when: (restore_discourse_latest_backup | default(None)) is not none
+
+- name: 🔄 Restart Discourse Container
+  tags: [discourse, docker]
+  community.docker.docker_container:
+    name: "{{ restore_discourse_container_name }}"
+    restart: true
+    state: started
+  when: (restore_discourse_latest_backup | default(None)) is not none
+
+- name: 🧹 Clean Backups
+  tags: [backup, cleanup]
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ restore_discourse_backups.files }}"

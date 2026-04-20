@@ -28,4 +28,4 @@
     group: root
     mode: "{{ '0644' if item.endswith('.pub') else '0600' }}"
   with_fileglob:
-    - ../../{{ inventory_hostname }}/secrets/ssh_host_keys/*
+    - secrets/ssh_host_keys/{{ inventory_hostname }}/*

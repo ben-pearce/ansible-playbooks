@@ -1,5 +1,6 @@
-- name: Configure sarge
-  hosts: sarge
-  become: true
-  roles:
-    - sarge
+- "become": true
+  "hosts": "sarge"
+  "name": "Configure sarge"
+  "roles":
+  - "common"
+  - "proxmox_backup_server"

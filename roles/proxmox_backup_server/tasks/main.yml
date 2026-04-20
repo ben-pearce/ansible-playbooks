@@ -1,0 +1,259 @@
+- name: 🏷️ Set hostname from inventory
+  ansible.builtin.hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: 📦 Install pexpect
+  ansible.builtin.package:
+    name: python3-pexpect
+    state: present
+  become: true
+
+- name: 📁 Ensure mount directory exists
+  tags: [nfs, datastore]
+  ansible.builtin.file:
+    path: /mnt/data
+    state: directory
+    mode: '0755'
+
+- name: 📦 Add Proxmox PBS repository
+  tags: [apt]
+  become: true
+  block:
+
+    - name: 📁 Ensure keyring directory exists
+      ansible.builtin.file:
+        path: /usr/share/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: 🔐 Add Proxmox PBS apt repository
+      ansible.builtin.deb822_repository:
+        name: proxmox-pbs
+        types: [deb]
+        uris: http://download.proxmox.com/debian/pbs
+        suites: '{{ ansible_facts["distribution_release"] }}'
+        components: [pbs-no-subscription]
+        signed_by: /usr/share/keyrings/proxmox-archive-keyring.gpg
+        state: present
+        enabled: true
+
+    - name: 🔄 Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+- name: 🔍 Get datastore list
+  tags: [datastore]
+  ansible.builtin.command: >-
+    proxmox-backup-manager datastore list
+    --output-format json
+  register: proxmox_backup_server_datastore_list
+  changed_when: false
+
+- name: 💾 Create proxmox datastore
+  tags: [datastore]
+  ansible.builtin.command:
+    cmd: >-
+      proxmox-backup-manager
+      datastore create {{ proxmox_datastore_name }} /mnt/data
+      --gc-schedule daily
+  when: >-
+    proxmox_datastore_name not in
+    proxmox_backup_server_datastore_list.stdout | from_json | map(attribute='name') | list
+  changed_when: true
+
+- name: 🔍 Get account list
+  tags: [datastore]
+  ansible.builtin.command: >-
+    proxmox-backup-manager acme account list
+    --output-format json
+  register: proxmox_backup_server_account_list
+  changed_when: false
+
+- name: 🌍 Register ACME account
+  tags: [acme]
+  ansible.builtin.expect:
+    command: >-
+      proxmox-backup-manager acme account register
+      default
+      {{ cloudflare_admin_user }}
+      --directory https://acme-v02.api.letsencrypt.org/directory
+    responses:
+      'Do you agree to the above terms\? \[y\|N\]:': 'y'
+      'Do you want to use external account binding\? \[y\|N\]:': 'N'
+  when: >-
+    'default' not in
+    proxmox_backup_server_account_list.stdout | from_json | map(attribute='name') | list
+  become: true
+
+- name: 🔍 Get plugin list
+  tags: [datastore]
+  ansible.builtin.command: >-
+    proxmox-backup-manager acme plugin list
+    --output-format json
+  register: proxmox_backup_server_plugin_list
+  changed_when: false
+
+- name: 🌐 Add ACME DNS plugin (Cloudflare)
+  tags: [acme]
+  when: >-
+    'cloudflare' not in
+    proxmox_backup_server_plugin_list.stdout | from_json | map(attribute='plugin') | list
+  become: true
+  block:
+
+    - name: 📄 Create temporary ACME credentials file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: _acme_dns
+      register: proxmox_backup_server_acme_tempfile
+
+    - name: ✍️ Write DNS API credentials
+      ansible.builtin.copy:
+        dest: "{{ proxmox_backup_server_acme_tempfile.path }}"
+        content: |
+          {% for key, value in acme_dns_credentials.items() %}
+          {{ key }}={{ value }}
+          {% endfor %}
+        mode: "0600"
+      no_log: true
+
+    - name: 🌐 Register ACME plugin
+      ansible.builtin.command:
+        cmd: >
+          proxmox-backup-manager
+          acme plugin add dns cloudflare
+          --api cf
+          --data {{ proxmox_backup_server_acme_tempfile.path }}
+      changed_when: true
+
+  always:
+    - name: 🧹 Remove temporary ACME credentials file
+      ansible.builtin.file:
+        path: "{{ proxmox_backup_server_acme_tempfile.path }}"
+        state: absent
+
+- name: 🔍 Get node configuration
+  tags: [datastore]
+  ansible.builtin.command: >-
+    proxmox-backup-manager node show --output-format json
+  register: proxmox_backup_server_node_config
+  changed_when: false
+
+- name: 📜 Configure ACME domain
+  tags: [acme, cert]
+  ansible.builtin.command:
+    cmd: >-
+      proxmox-backup-manager node update
+      --acmedomain0 domain={{ cloudflare_domain }},plugin=cloudflare
+  when: "'acmedomain0' not in (proxmox_backup_server_node_config.stdout | from_json)"
+  changed_when: true
+
+- name: 📜 Order ACME certificate
+  tags: [acme, cert]
+  ansible.builtin.command:
+    cmd: proxmox-backup-manager acme cert order --force
+  when: "'acmedomain0' not in (proxmox_backup_server_node_config.stdout | from_json)"
+  changed_when: true
+
+- name: 🩹 Remove subscription nag
+  tags: [proxmox]
+  ansible.builtin.replace:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+    regexp: 'checked_command: function \(orig_cmd\) (.|\n)+?\},\n\n'
+    replace: 'checked_command: (cmd) => cmd(),\n\n'
+    backup: true
+
+- name: 🔍 Get user list
+  tags: [user]
+  ansible.builtin.command: >-
+    proxmox-backup-manager user list --output-format json
+  register: proxmox_backup_server_user_list
+  changed_when: false
+
+- name: 👤 Register proxmox user
+  tags: [user]
+  when: >
+    'proxmox@pbs' not in
+    proxmox_backup_server_user_list.stdout | from_json | map(attribute='userid') | list
+  ansible.builtin.shell:
+    cmd: >-
+      proxmox-backup-manager
+      user create proxmox@pbs
+      --password "$(cat)"
+    stdin: "{{ lookup('ansible.builtin.file', 'secrets/proxmox_user_password') }}"
+  no_log: true
+  changed_when: true
+
+- name: 🔍 Get verify jobs
+  tags: [verify]
+  ansible.builtin.command: >-
+    proxmox-backup-manager verify-job list --output-format json
+  register: proxmox_backup_server_verify_jobs
+  changed_when: false
+
+- name: ✅ Create verify job
+  tags: [verify]
+  when: >
+    proxmox_datastore_name not in
+    proxmox_backup_server_verify_jobs.stdout | from_json | map(attribute='store') | list
+  ansible.builtin.command: >-
+      proxmox-backup-manager
+      verify-job create {{ proxmox_datastore_name }}-verify
+      --store {{ proxmox_datastore_name }}
+      --ignore-verified 1
+      --outdated-after 30
+      --schedule "sat 00:00"
+  changed_when: true
+
+- name: 🔍 Get notification endpoints
+  tags: [notification]
+  ansible.builtin.command: >-
+    proxmox-backup-manager notification endpoint smtp list
+    --output-format json
+  register: proxmox_backup_server_notification_endpoints
+  changed_when: false
+
+- name: 📮 Create notification endpoint
+  tags: [notification]
+  when: >
+    'notifications-smtp' not in
+    proxmox_backup_server_notification_endpoints.stdout | from_json | map(attribute='name') | list
+  ansible.builtin.command: >-
+      proxmox-backup-manager notification endpoint smtp
+      create notifications-smtp
+      --from-address {{ smtp_from_address }}
+      --server {{ smtp_server }}
+      --mode starttls
+      --mailto-user root@pam
+      --username {{ smtp_from_address }}
+      --password {{ smtp_password }}
+  changed_when: true
+
+- name: 🔍 Get user ACLs
+  tags: [user, acl]
+  ansible.builtin.command: >-
+    proxmox-backup-manager acl list --output-format json
+  register: proxmox_backup_server_user_acl_list
+  changed_when: false
+
+- name: 📝 Assign user datastore ACL
+  tags: [user]
+  when: >
+    'proxmox@pbs' not in
+    proxmox_backup_server_user_acl_list.stdout | from_json | map(attribute='ugid') | list
+  ansible.builtin.command:
+    cmd: >-
+      proxmox-backup-manager acl update
+      /datastore/{{ proxmox_datastore_name }}
+      DatastoreAdmin
+      --auth-id proxmox@pbs
+  changed_when: true
+
+- name: 🌐 Mount NFS share
+  tags: [nfs]
+  ansible.posix.mount:
+    path: /mnt/data
+    src: '{{ proxmox_datastore_nfs_src }}'
+    fstype: nfs
+    opts: defaults
+    state: mounted

@@ -21,15 +21,7 @@
     ability_scripts: |
       {% set out = {} %}
       {% for ability in item.abilities %}
-      {% set _ = out.update({
-        ability: lookup('ansible.builtin.file', lookup('ansible.builtin.first_found', {
-            'files': [
-              playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/files/abilities/' ~ ability,
-              role_path ~ '/files/abilities/' ~ ability
-            ],
-            'skip': True
-          })
-        )}) %}
+      {% set _ = out.update({ ability: lookup('ansible.builtin.file', 'files/abilities/' ~ ability) }) %}
       {% endfor %}
       {{ out }}
   loop: "{{ common_users_abilities_config }}"

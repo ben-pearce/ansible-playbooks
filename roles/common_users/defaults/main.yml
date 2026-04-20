@@ -1,15 +1,3 @@
-common_users_users:
-  - uid: 2000
-    name: deploy
-    abilities:
-      - compose-stack-update
-  - uid: 2001
-    name: borg
-    abilities:
-      - mount-filesystem
-      - postgres-backup
-  - uid: 2002
-    name: git
 common_users_known_hosts:
   - host: github.com
     user: git

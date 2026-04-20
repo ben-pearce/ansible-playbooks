@@ -57,7 +57,7 @@
     owner: "{{ common_docker_compose_user.name }}"
     group: "{{ common_docker_compose_user.name }}"
     mode: "0600"
-  loop: "{{ (playbook_dir ~ '/roles/' ~ inventory_hostname ~ '/secrets/docker/*') | fileglob }}"
+  with_fileglob: secrets/docker/{{ inventory_hostname }}/*
 
 - name: "🌍 Set system environment variables"
   tags: [env, system]

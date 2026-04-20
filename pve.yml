@@ -1,5 +1,7 @@
-- name: Configure pve
-  hosts: pve
-  become: true
-  roles:
-    - pve
+- "become": true
+  "hosts": "pve"
+  "name": "Configure pve"
+  "roles":
+  - "common"
+  - "common_users"
+  - "proxmox_virtual_environment"

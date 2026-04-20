@@ -1,14 +1,14 @@
-- name: Configure barbie
-  hosts: barbie
-  become: true
-  roles:
-    - common
-    - common_journald
-    - common_users
-    - common_users_abilities
-    - common_docker_compose
-    - barbie
-    - common_docker
-    - common_docker_compose_start
-    - barbie_init
-    - common_restore
+- "become": true
+  "hosts": "barbie"
+  "name": "Configure barbie"
+  "roles":
+  - "common"
+  - "common_journald"
+  - "common_users"
+  - "common_users_abilities"
+  - "common_docker_compose"
+  - "borgmatic_config"
+  - "common_docker"
+  - "common_docker_compose_start"
+  - "borgmatic_init"
+  - "borgmatic_restore"
