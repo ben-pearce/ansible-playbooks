@@ -1,12 +1,13 @@
 - "become": true
-  "hosts": "sparks"
-  "name": "Configure sparks"
+  "hosts": "tunnel"
+  "name": "Configure tunnel"
   "roles":
+  - "common_wait"
   - "common"
   - "common_journald"
   - "common_users"
   - "common_users_abilities"
-  - "borgmatic_restore"
   - "common_docker_compose"
   - "common_docker"
+  - "tunnel"
   - "common_docker_compose_start"

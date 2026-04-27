@@ -1,7 +1,7 @@
 - name: "🔍 Check for Docker user config"
   tags: [docker, config]
   ansible.builtin.stat:
-    path: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
+    path: secrets/docker_config/{{ inventory_hostname }}/config.json
   register: common_docker_config_json
   delegate_to: localhost
   become: false
@@ -20,7 +20,7 @@
 
     - name: "📄 Deploy Docker config file"
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/roles/{{ inventory_hostname }}/secrets/docker_config/config.json"
+        src: secrets/docker_config/{{ inventory_hostname }}/config.json
         dest: /root/.docker/config.json
         owner: root
         group: root

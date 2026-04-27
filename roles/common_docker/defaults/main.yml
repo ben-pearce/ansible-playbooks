@@ -1,0 +1,2 @@
+common_docker_daemon_config:
+  log-driver: journald

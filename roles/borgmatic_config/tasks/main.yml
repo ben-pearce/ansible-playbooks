@@ -1,0 +1,31 @@
+- name: 📂 Create Borgmatic Config Directory
+  tags: [borgmatic, config]
+  ansible.builtin.file:
+    path: "{{ common_docker_compose_data_dir }}/borgmatic/config"
+    state: directory
+    mode: "0600"
+
+- name: 📝 Generate Borgmatic Configs
+  tags: [borgmatic, config]
+  ansible.builtin.copy:
+    dest: "{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}.yaml"
+    content: >-
+      {{
+        borgmatic_config.default |
+        ansible.builtin.combine(
+          item.value,
+          recursive=true,
+          list_merge='append_rp'
+        ) |
+        to_nice_yaml(indent=2)
+      }}
+    mode: "0644"
+  with_items: "{{ borgmatic_config.configs | dict2items }}"
+
+- name: 📦 Create Borgmatic Remote Mountpoints
+  tags: [borgmatic, config]
+  ansible.builtin.file:
+    path: "{{ common_docker_compose_data_dir }}/borgmatic/config/{{ item.key }}"
+    state: directory
+    mode: "0755"
+  with_items: "{{ borgmatic_config.configs | dict2items }}"
