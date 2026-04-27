@@ -1,14 +1,15 @@
-- name: Configure woody
-  hosts: woody
-  become: true
-  roles:
-    - common
-    - common_journald
-    - common_users
-    - common_users_abilities
-    - common_restore
-    - common_docker_compose
-    - common_docker_config
-    - common_docker
-    - woody
-    - common_docker_compose_start
+- "become": true
+  "hosts": "woody"
+  "name": "Configure woody"
+  "roles":
+  - "common"
+  - "common_journald"
+  - "common_users"
+  - "common_users_abilities"
+  - "borgmatic_restore"
+  - "common_docker_compose"
+  - "common_docker_config"
+  - "common_docker"
+  - "restore_gitlab"
+  - "restore_discourse"
+  - "common_docker_compose_start"

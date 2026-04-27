@@ -1,0 +1,2 @@
+restore_gitlab_container_name: solero-gitlab
+restore_gitlab_backup_dir: '{{ common_docker_compose_data_dir }}/gitlab/backups/'

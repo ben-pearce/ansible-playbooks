@@ -1,0 +1,86 @@
+- name: 📦 Install Expect
+  tags: [packages, mailcow]
+  ansible.builtin.apt:
+    pkg:
+      - python3-pexpect
+    state: present
+    update_cache: true
+
+- name: 📝 Write Mailcow Configuration
+  tags: [config, mailcow]
+  ansible.builtin.lineinfile:
+    path: "{{ restore_mailcow_container_path }}/mailcow.conf"
+    state: present
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    create: true
+    mode: "0644"
+  loop: >-
+    {{
+      restore_mailcow_config_defaults |
+      ansible.builtin.combine(restore_mailcow_config) |
+      dict2items
+    }}
+
+- name: ▶️ Boot Mailcow Services
+  tags: [docker, mailcow]
+  community.docker.docker_compose_v2:
+    project_src: "{{ restore_mailcow_container_path }}"
+    wait: true
+
+- name: 🔍 Find Mailcow Backups
+  tags: [backup, mailcow]
+  ansible.builtin.find:
+    paths: "{{ restore_mailcow_backup_dir }}"
+    file_type: directory
+    recurse: false
+  register: restore_mailcow_backups
+
+- name: 🕒 Select Latest Mailcow Backup
+  tags: [backup, mailcow]
+  ansible.builtin.set_fact:
+    restore_mailcow_latest_backup: >-
+      {{
+        (
+          restore_mailcow_backups.files |
+          sort(attribute='mtime', reverse=true) |
+          first
+        ).path
+      }}
+  when: restore_mailcow_backups.files | length > 0
+
+- name: ♻️ Restore Mailcow Backup
+  tags: [backup, mailcow]
+  ansible.builtin.expect:
+    command: >-
+      bash {{ restore_mailcow_container_path }}/helper-scripts/backup_and_restore.sh restore
+    responses:
+      "(?i)backup location": "{{ restore_mailcow_backup_dir }}"
+      "(?i)restore point": "1"
+      "(?i)dataset to restore": "0"
+      "(?i)use the db parameters found": "y"
+      "(?i)force a resync": "y"
+    timeout: null
+  register: restore_mailcow_backup
+  changed_when: restore_mailcow_backup.rc != 0
+  when: (restore_mailcow_latest_backup | default(None)) is not none
+
+- name: ⏳ Start Certbot & Wait
+  tags: [docker, certbot]
+  community.docker.docker_compose_v2:
+    project_src: "{{ common_docker_compose_directory }}"
+    services: ["certbot"]
+    wait: true
+
+- name: 🛠 Run Certbot Deploy Hook
+  tags: [docker, certbot]
+  community.docker.docker_container_exec:
+    container: certbot
+    command: /etc/letsencrypt/renewal-hooks/deploy/mailcow.sh
+
+- name: 🧹 Clean Mailcow Backups
+  tags: [backup, cleanup]
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ restore_mailcow_backups.files }}"
