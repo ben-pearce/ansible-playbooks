@@ -1,5 +1,0 @@
-{
-  "log-driver": "journald",
-  "data-root": "/mnt/data/docker",
-  "storage-driver": "overlay2"
-}
