@@ -29,3 +29,5 @@
     mode: "{{ '0644' if item.endswith('.pub') else '0600' }}"
   with_fileglob:
     - secrets/ssh_host_keys/{{ inventory_hostname }}/*
+  notify:
+    - restart ssh

@@ -1,0 +1,6 @@
+- name: "🔁 Restart ssh daemon"
+  tags: [ssh, systemd]
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  listen: restart ssh
