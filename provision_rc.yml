@@ -1,0 +1,13 @@
+- "become": true
+  "hosts": "rc"
+  "name": "Configure rc"
+  "roles":
+  - "common"
+  - "common_journald"
+  - "common_users"
+  - "common_users_abilities"
+  - "borgmatic_restore"
+  - "common_docker_compose"
+  - "common_docker"
+  - "restore_mailcow"
+  - "common_docker_compose_start"
