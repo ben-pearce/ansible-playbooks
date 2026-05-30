@@ -1,0 +1,12 @@
+- "become": true
+  "hosts": "etch"
+  "name": "Configure etch"
+  "roles":
+  - "common"
+  - "common_journald"
+  - "common_users"
+  - "common_users_abilities"
+  - "borgmatic_restore"
+  - "common_docker_compose"
+  - "common_docker"
+  - "common_docker_compose_start"
