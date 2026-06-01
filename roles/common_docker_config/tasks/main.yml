@@ -1,14 +1,5 @@
-- name: "🔍 Check for Docker user config"
+- name: "🛠️ Apply Docker user config"
   tags: [docker, config]
-  ansible.builtin.stat:
-    path: secrets/docker_config/{{ inventory_hostname }}/config.json
-  register: common_docker_config_json
-  delegate_to: localhost
-  become: false
-
-- name: "🛠️ Apply Docker user config if available"
-  tags: [docker, config]
-  when: common_docker_config_json.stat.exists
   block:
     - name: "📂 Ensure Docker config directory exists"
       ansible.builtin.file:

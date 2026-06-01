@@ -25,12 +25,15 @@
 - name: 📁 Create Docker Compose Data Directory
   tags: [docker, data]
   ansible.builtin.file:
-    path: "{{ common_docker_compose_data_dir }}"
+    path: "{{ item }}"
     state: directory
     mode: "0755"
+  loop:
+    - "{{ common_docker_compose_data_dir }}/wireguard/templates"
+    - "{{ common_docker_compose_data_dir }}/ddclient"
 
-- name: 📝 Copy wireguard server Configuration
-  tags: [docker, ddclient]
+- name: 📝 Copy WireGuard Server Configuration
+  tags: [docker, wireguard]
   ansible.builtin.template:
     src: wireguard/server.conf.j2
     dest: "{{ common_docker_compose_data_dir }}/wireguard/templates/server.conf"
