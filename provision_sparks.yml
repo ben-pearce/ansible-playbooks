@@ -9,4 +9,5 @@
   - "borgmatic_restore"
   - "common_docker_compose"
   - "common_docker"
+  - "common_docker_daemon_config"
   - "common_docker_compose_start"

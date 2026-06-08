@@ -9,5 +9,6 @@
   - "borgmatic_restore"
   - "common_docker_compose"
   - "common_docker"
+  - "common_docker_daemon_config"
   - "restore_mailcow"
   - "common_docker_compose_start"

@@ -1,0 +1,6 @@
+- name: "🔁 Restart containerd"
+  tags: [containerd, systemd]
+  ansible.builtin.service:
+    name: containerd
+    state: restarted
+  listen: restart containerd
