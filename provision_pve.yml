@@ -1,6 +1,7 @@
 - "become": true
-  "hosts": "pve"
-  "name": "Configure pve"
+  "hosts":
+  - "pve"
+  "name": "pve"
   "roles":
   - "common"
   - "common_users"

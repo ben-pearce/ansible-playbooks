@@ -39,15 +39,7 @@
     line: "{{ item.key }}={{ item.value }}"
     create: true
     mode: "0644"
-  loop: >-
-    {{
-      [
-        { 'key': 'PUID', 'value': common_docker_compose_user.uid },
-        { 'key': 'PGID', 'value': common_docker_compose_user.group },
-        { 'key': 'TZ', 'value': common_docker_compose_timezone },
-        { 'key': 'DATA_DIR', 'value': common_docker_compose_data_dir }
-      ] + common_docker_compose.environment
-    }}
+  loop: "{{ common_docker_compose.environment }}"
 
 - name: "🔐 Copy secrets"
   tags: [secrets]

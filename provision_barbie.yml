@@ -1,6 +1,7 @@
 - "become": true
-  "hosts": "barbie"
-  "name": "Configure barbie"
+  "hosts":
+  - "barbie"
+  "name": "barbie"
   "roles":
   - "common"
   - "common_journald"
@@ -9,6 +10,8 @@
   - "common_docker_compose"
   - "borgmatic_config"
   - "common_docker"
+  - "common_docker_daemon_config"
+  - "common_containerd_config"
   - "common_docker_compose_start"
   - "borgmatic_init"
   - "borgmatic_restore"
