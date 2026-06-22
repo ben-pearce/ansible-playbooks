@@ -1,6 +1,7 @@
 - "become": true
-  "hosts": "woody"
-  "name": "Configure woody"
+  "hosts":
+  - "woody"
+  "name": "woody"
   "roles":
   - "common"
   - "common_journald"
@@ -10,6 +11,7 @@
   - "common_docker_compose"
   - "common_docker_config"
   - "common_docker"
+  - "common_docker_daemon_config"
   - "restore_gitlab"
   - "restore_discourse"
   - "common_docker_compose_start"

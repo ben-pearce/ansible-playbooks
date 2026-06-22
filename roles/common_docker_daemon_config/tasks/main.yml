@@ -1,0 +1,21 @@
+- name: 📁 Create Docker Config Directory
+  tags: [docker, config]
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    mode: "0755"
+
+- name: 📄 Write Docker Daemon Config
+  tags: [docker, config]
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ common_docker_daemon_config | to_nice_json }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify:
+    - restart docker
+
+- name: "🔄 Apply Docker Daemon config changes"
+  tags: [docker]
+  ansible.builtin.meta: flush_handlers

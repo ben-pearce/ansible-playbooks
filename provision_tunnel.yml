@@ -1,6 +1,7 @@
-- "become": true
-  "hosts": "tunnel"
-  "name": "Configure tunnel"
+- "become": false
+  "hosts":
+  - "tunnel"
+  "name": "tunnel"
   "roles":
   - "common_wait"
   - "common"
