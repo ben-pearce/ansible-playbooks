@@ -1,0 +1,6 @@
+- name: "🔁 Restart docker"
+  tags: [docker, systemd]
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  listen: restart docker

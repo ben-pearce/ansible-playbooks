@@ -1,0 +1,21 @@
+- name: 📁 Create Containerd Config Directory
+  tags: [containerd, config]
+  ansible.builtin.file:
+    path: /etc/containerd
+    state: directory
+    mode: "0755"
+
+- name: 📄 Write Containerd Config
+  tags: [containerd, config]
+  ansible.builtin.copy:
+    dest: /etc/containerd/config.toml
+    content: "{{ common_containerd_config | community.general.to_toml }}"
+    owner: root
+    group: root
+    mode: "0600"
+  notify:
+    - restart containerd
+
+- name: "🔄 Apply Containerd config changes"
+  tags: [containerd]
+  ansible.builtin.meta: flush_handlers

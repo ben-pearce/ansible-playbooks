@@ -1,6 +1,7 @@
 - "become": true
-  "hosts": "rc"
-  "name": "Configure rc"
+  "hosts":
+  - "rc"
+  "name": "rc"
   "roles":
   - "common"
   - "common_journald"
@@ -9,5 +10,6 @@
   - "borgmatic_restore"
   - "common_docker_compose"
   - "common_docker"
+  - "common_docker_daemon_config"
   - "restore_mailcow"
   - "common_docker_compose_start"

@@ -1,6 +1,7 @@
 - "become": true
-  "hosts": "sarge"
-  "name": "Configure sarge"
+  "hosts":
+  - "sarge"
+  "name": "sarge"
   "roles":
   - "common"
   - "proxmox_backup_server"
