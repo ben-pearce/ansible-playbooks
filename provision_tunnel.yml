@@ -1,4 +1,5 @@
-- "become": false
+- "become": true
+  "gather_facts": false
   "hosts":
   - "tunnel"
   "name": "tunnel"
