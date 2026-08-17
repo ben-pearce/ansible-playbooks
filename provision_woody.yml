@@ -12,6 +12,7 @@
   - "common_docker_config"
   - "common_docker"
   - "common_docker_daemon_config"
+  - "common_containerd_config"
   - "restore_gitlab"
   - "restore_discourse"
   - "common_docker_compose_start"
