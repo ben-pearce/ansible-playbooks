@@ -1,0 +1,11 @@
+- "become": true
+  "hosts":
+  - "etch"
+  - "barbie"
+  - "jessie"
+  - "zurg"
+  - "woody"
+  - "rc"
+  "name": "update"
+  "roles":
+  - "common_update"
