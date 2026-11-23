@@ -1,0 +1,7 @@
+- "become": true
+  "hosts":
+  - "pve"
+  - "sarge"
+  "name": "upgrade"
+  "roles":
+  - "common_update"

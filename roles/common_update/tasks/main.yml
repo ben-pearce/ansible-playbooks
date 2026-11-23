@@ -1,8 +1,8 @@
 - name: 🆙 Update & Upgrade Packages
   tags: [update, packages]
   ansible.builtin.apt:
-    upgrade: true
     update_cache: true
+    upgrade: "{{ common_update_upgrade | default(true) }}"
 
 - name: 🔍 Check Reboot Flag
   tags: [reboot, check]
@@ -13,4 +13,6 @@
 - name: 🔄 Reboot If Needed
   tags: [reboot]
   ansible.builtin.reboot:
-  when: common_update_reboot_required.stat.exists
+  when:
+    - common_update_reboot | default(true) | bool
+    - common_update_reboot_required.stat.exists
